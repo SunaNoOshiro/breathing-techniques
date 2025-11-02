@@ -60,7 +60,7 @@ class YAMLLocalizationStrategy extends LocalizationStrategy {
       // Try different paths for development and production
       let response;
       try {
-        response = await fetch(`/locales/${languageCode}.yaml`);
+        response = await fetch(`/breathing-techniques/locales/${languageCode}.yaml`);
       } catch {
         try {
           response = await fetch(`./locales/${languageCode}.yaml`);
