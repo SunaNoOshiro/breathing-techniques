@@ -1,0 +1,173 @@
+# English translations for breathing techniques app
+settings: Settings
+language: Language
+theme: Theme
+sound: Sound
+vibration: Vibration
+technique: Technique
+on: On
+off: Off
+start: Start
+stop: Stop
+pause: Pause
+secLeft: sec left
+
+# Phase names
+inhale: Inhale
+hold: Hold
+hold1: Hold
+hold2: Hold
+exhale: Exhale
+
+# Theme names
+dark: Dark
+ocean: Ocean
+forest: Forest
+sunset: Sunset
+purple: Purple
+light: Light
+
+# Language names
+languageName: English
+
+# Visualization modes
+visualizationMode: Visualization Mode
+prevVisualization: Previous visualization
+nextVisualization: Next visualization
+visualization:
+  classic: 🫁 Organic Flow
+  random: 🎲 Shape Shifter
+  decreasing: 🔻 Geometric Cascade
+  rotating: 🌀 Spiral Dance
+  circle: ⭕ Circle Harmony
+  triangle: 🔺 Triangle Flow
+  square: ◻️ Square Rhythm
+  hexagon: ⬡ Hexagon Pulse
+
+# Common UI labels
+noTechniqueSelected: No technique selected
+breathingApp: Breathing App
+sessionStatus: Session Status
+currentPhase: Current Phase
+timeRemaining: Time Remaining
+sessionPaused: Session paused
+sessionResumed: Session resumed
+sessionStarted: Session started
+sessionStopped: Session stopped
+pauseSession: Pause session
+resumeSession: Resume session
+startSession: Start session
+stopSession: Stop session
+ready: Ready
+pressToStart: Press to start
+loadingSettings: Loading settings...
+loadingControls: Loading controls...
+loadingTechnique: Loading technique...
+loadingVisualization: Loading visualization...
+
+# Techniques
+techniques:
+  box4:
+    name: Box Breathing 4-4-4-4
+    description: Classic square breathing technique
+    benefits: Reduces stress, improves focus, balances nervous system
+    instructions:
+      - Breathe in slowly for 4 seconds
+      - Hold your breath for 4 seconds
+      - Exhale slowly for 4 seconds
+      - Hold empty for 4 seconds
+      - Repeat the cycle
+  
+  "478":
+    name: 4-7-8 Breathing
+    description: Calming breathing technique for anxiety relief
+    benefits: Reduces anxiety, promotes relaxation, improves sleep
+    instructions:
+      - Breathe in for 4 seconds
+      - Hold your breath for 7 seconds
+      - Exhale slowly for 8 seconds
+      - Repeat the cycle
+  
+  "478-extended":
+    name: Extended 4-7-8 Breathing
+    description: Extended version of the 4-7-8 technique
+    benefits: Deep relaxation, stress relief, better sleep quality
+    instructions:
+      - Breathe in for 4 seconds
+      - Hold your breath for 7 seconds
+      - Exhale slowly for 8 seconds
+      - Hold empty for 2 seconds
+      - Repeat the cycle
+  
+  triangle:
+    name: Triangle Breathing 4-4-4
+    description: Simple three-phase breathing pattern
+    benefits: Quick stress relief, mental clarity, energy balance
+    instructions:
+      - Breathe in for 4 seconds
+      - Hold your breath for 4 seconds
+      - Exhale for 4 seconds
+      - Repeat the cycle
+  
+  "555":
+    name: Equal Breathing 5-5-5
+    description: Balanced breathing for mindfulness
+    benefits: Mindfulness, concentration, emotional balance
+    instructions:
+      - Breathe in for 5 seconds
+      - Hold your breath for 5 seconds
+      - Exhale for 5 seconds
+      - Repeat the cycle
+  
+  energy:
+    name: Energy Breathing
+    description: Energizing breathing technique
+    benefits: Increases energy, improves alertness, boosts mood
+    instructions:
+      - Quick inhale for 2 seconds
+      - Hold for 1 second
+      - Quick exhale for 2 seconds
+      - Hold empty for 1 second
+      - Repeat the cycle
+  
+  box6:
+    name: Extended Box Breathing 6-6-6-6
+    description: Extended square breathing for deep relaxation
+    benefits: Deep relaxation, stress reduction, improved focus
+    instructions:
+      - Breathe in slowly for 6 seconds
+      - Hold your breath for 6 seconds
+      - Exhale slowly for 6 seconds
+      - Hold empty for 6 seconds
+      - Repeat the cycle
+  
+  coherent:
+    name: Coherent Breathing 5-5
+    description: Heart rate variability optimization
+    benefits: Heart health, stress reduction, emotional regulation
+    instructions:
+      - Breathe in for 5 seconds
+      - Exhale for 5 seconds
+      - Repeat the cycle
+  
+  "628":
+    name: Energy Breathing 6-2-8
+    description: Quick inhale, short hold, long exhale for energy
+    benefits: Increases energy, improves alertness, quick stress relief
+    instructions:
+      - Quick, sharp inhale for 6 seconds
+      - Brief hold for 2 seconds
+      - Long, controlled exhale for 8 seconds
+      - Feel the energy building up
+      - Use when you need a quick boost
+  
+  "4444-extended":
+    name: Extended Box Breathing 6-6-6-6
+    description: Longer box breathing for deep focus
+    benefits: Deep focus, meditation preparation, advanced relaxation
+    instructions:
+      - Breathe in slowly for 6 seconds
+      - Hold your breath for 6 seconds
+      - Exhale slowly for 6 seconds
+      - Hold empty for 6 seconds
+      - Perfect for deep meditation
