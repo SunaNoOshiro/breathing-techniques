@@ -5,10 +5,6 @@ theme: Theme
 sound: Sound
 vibration: Vibration
 technique: Technique
-chooseTechnique: Choose a breathing flow that fits your pace
-preferences: Preferences
-languageDescription: Select the interface language
-themeDescription: Pick a palette that feels comfortable
 on: On
 off: Off
 start: Start
