@@ -65,7 +65,9 @@ const BreathingFigure = ({
     panel: '#0f172a',
     stroke: '#9CA3AF',
     diaphragm: '#4B5563',
-    green: '#34D399'
+    green: '#34D399',
+    accent: '#60A5FA',
+    themeKey: 'dark'
   };
 
   const auraId = useMemo(() => `figure-aura-${Math.random().toString(36).slice(2)}`, []);
