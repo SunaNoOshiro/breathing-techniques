@@ -10,15 +10,15 @@ const ClassicCosmicBackdrop = ({ width = 0, height = 0, themeColors, currentColo
   const glowId = useMemo(() => `classic-glow-${Math.random().toString(36).slice(2)}`, []);
   const starField = useMemo(() => {
     if (!width || !height) return [];
-    const radius = Math.min(width, height) * 0.46;
-    return Array.from({ length: 12 }, (_, i) => {
+    const radius = Math.min(width, height) * 0.48;
+    return Array.from({ length: 20 }, (_, i) => {
       const angle = (i * 123 * Math.PI) / 180;
-      const r = radius * (0.32 + (i % 4) * 0.06);
+      const r = radius * (0.28 + (i % 6) * 0.08);
       return {
-        x: cx + Math.cos(angle) * r * 0.34,
-        y: cy + Math.sin(angle) * r * 0.34,
-        size: 1 + (i % 4) * 0.45,
-        opacity: 0.18 + (i % 3) * 0.08
+        x: cx + Math.cos(angle) * r * 0.35,
+        y: cy + Math.sin(angle) * r * 0.35,
+        size: 1.1 + (i % 5) * 0.55,
+        opacity: 0.2 + (i % 4) * 0.1
       };
     });
   }, [width, height, cx, cy]);
@@ -34,9 +34,9 @@ const ClassicCosmicBackdrop = ({ width = 0, height = 0, themeColors, currentColo
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id={gradientId} cx="50%" cy="50%" r="68%">
-          <stop offset="0%" stopColor={themeColors?.active || '#74f9ff'} stopOpacity="0.3" />
-          <stop offset="50%" stopColor={currentColors?.accent || '#7dd3fc'} stopOpacity="0.2" />
+        <radialGradient id={gradientId} cx="50%" cy="50%" r="70%">
+          <stop offset="0%" stopColor={themeColors?.active || '#74f9ff'} stopOpacity="0.45" />
+          <stop offset="45%" stopColor={currentColors?.active || '#7dd3fc'} stopOpacity="0.25" />
           <stop offset="100%" stopColor={themeColors?.idle || '#0f172a'} stopOpacity="0" />
         </radialGradient>
         <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
@@ -51,8 +51,18 @@ const ClassicCosmicBackdrop = ({ width = 0, height = 0, themeColors, currentColo
         <circle
           cx={cx}
           cy={cy}
-          r={Math.min(width, height) * 0.46}
+          r={Math.min(width, height) * 0.48}
           fill={`url(#${gradientId})`}
+          style={{ filter: `url(#${glowId})` }}
+        />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={Math.min(width, height) * 0.52}
+          fill="none"
+          stroke={themeColors?.active || '#7dd3fc'}
+          strokeWidth={Math.max(1.2, Math.min(width, height) * 0.005)}
+          opacity={0.35}
           style={{ filter: `url(#${glowId})` }}
         />
         {starField.map((star, idx) => (

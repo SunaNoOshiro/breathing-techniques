@@ -166,16 +166,16 @@ function RotatingShapeWrapper(props) {
 
   const starField = useMemo(() => {
     if (!width || !height) return [];
-    const count = 14;
-    const radius = Math.min(width, height) * 0.5;
+    const count = 24;
+    const radius = Math.min(width, height) * 0.52;
     return Array.from({ length: count }, (_, i) => {
-      const angle = (i * 104 * Math.PI) / 180;
-      const r = radius * (0.3 + (i % 4) * 0.07);
+      const angle = (i * 97 * Math.PI) / 180;
+      const r = radius * (0.3 + (i % 6) * 0.06);
       return {
-        x: cx + Math.cos(angle) * r * 0.38,
-        y: cy + Math.sin(angle) * r * 0.38,
-        size: 1.15 + (i % 4) * 0.45,
-        opacity: 0.14 + (i % 3) * 0.09
+        x: cx + Math.cos(angle) * r * 0.42,
+        y: cy + Math.sin(angle) * r * 0.42,
+        size: 1.3 + (i % 5) * 0.5,
+        opacity: 0.18 + (i % 4) * 0.12
       };
     });
   }, [width, height, cx, cy]);
@@ -185,10 +185,10 @@ function RotatingShapeWrapper(props) {
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
       <defs>
-        <radialGradient id={gradientId} cx="50%" cy="50%" r="68%">
-          <stop offset="0%" stopColor={withAlpha(brightColor, 0.85)} />
-          <stop offset="58%" stopColor={withAlpha(brightColor, 0.45)} />
-          <stop offset="100%" stopColor={withAlpha(dimColor, 0.12)} />
+        <radialGradient id={gradientId} cx="50%" cy="50%" r="70%">
+          <stop offset="0%" stopColor={withAlpha(brightColor, 0.95)} />
+          <stop offset="60%" stopColor={withAlpha(brightColor, 0.55)} />
+          <stop offset="100%" stopColor={withAlpha(dimColor, 0.15)} />
         </radialGradient>
         <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="12" result="blur" />
@@ -213,11 +213,11 @@ function RotatingShapeWrapper(props) {
         <circle
           cx={cx}
           cy={cy}
-          r={baseSize * 0.53}
+          r={baseSize * 0.55}
           fill="none"
           stroke={`url(#${gradientId})`}
-          strokeWidth={Math.max(1.25, baseSize * 0.009)}
-          strokeOpacity={0.2}
+          strokeWidth={Math.max(1.5, baseSize * 0.01)}
+          strokeOpacity={0.25}
           style={{ filter: `url(#${glowId})` }}
         />
       </g>

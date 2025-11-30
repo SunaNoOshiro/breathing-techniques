@@ -70,21 +70,18 @@ const BreathingFigure = ({
     themeKey: 'dark'
   };
 
-  const isLightTheme = safeCurrentColors.themeKey === 'light';
-  const accentGlow = safeCurrentColors.accent || safeCurrentColors.green;
-
   const auraId = useMemo(() => `figure-aura-${Math.random().toString(36).slice(2)}`, []);
   const glowId = useMemo(() => `figure-glow-${Math.random().toString(36).slice(2)}`, []);
   const starField = useMemo(() => {
-    const count = 10;
+    const count = 14;
     return Array.from({ length: count }, (_, i) => {
-      const angle = (i * 128 * Math.PI) / 180;
-      const r = 110 + (i % 4) * 12;
+      const angle = (i * 137 * Math.PI) / 180;
+      const r = 120 + (i % 5) * 10;
       return {
-        x: 130 + Math.cos(angle) * r * 0.42,
-        y: 170 + Math.sin(angle) * r * 0.3,
-        size: 1.1 + (i % 3) * 0.45,
-        opacity: 0.18 + (i % 4) * 0.08
+        x: 130 + Math.cos(angle) * r * 0.45,
+        y: 170 + Math.sin(angle) * r * 0.35,
+        size: 1.4 + (i % 4) * 0.6,
+        opacity: 0.25 + (i % 3) * 0.1
       };
     });
   }, []);
@@ -150,8 +147,8 @@ const BreathingFigure = ({
       >
         <defs>
           <radialGradient id={auraId} cx="50%" cy="45%" r="65%">
-            <stop offset="0%" stopColor={`${accentGlow}${isLightTheme ? '55' : 'aa'}`} />
-            <stop offset="55%" stopColor={`${safeCurrentColors.stroke}${isLightTheme ? '33' : '55'}`} />
+            <stop offset="0%" stopColor={`${safeCurrentColors.green}aa`} />
+            <stop offset="60%" stopColor={`${safeCurrentColors.stroke}55`} />
             <stop offset="100%" stopColor="transparent" />
           </radialGradient>
           <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
@@ -164,15 +161,15 @@ const BreathingFigure = ({
         </defs>
 
         <g filter={`url(#${glowId})`}>
-          <circle cx="130" cy="170" r="138" fill={`url(#${auraId})`} />
+          <circle cx="130" cy="170" r="140" fill={`url(#${auraId})`} />
           {starField.map((star, idx) => (
             <circle
               key={`figure-star-${idx}`}
               cx={star.x}
               cy={star.y}
               r={star.size}
-              fill={accentGlow}
-              opacity={isLightTheme ? star.opacity * 0.8 : star.opacity}
+              fill={safeCurrentColors.green}
+              opacity={star.opacity}
             />
           ))}
         </g>

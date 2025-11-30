@@ -84,16 +84,16 @@ const LayeredShape = ({
 
   const starField = useMemo(() => {
     if (!width || !height) return [];
-    const count = 12;
-    const radius = Math.min(width, height) * 0.44;
+    const count = 18;
+    const radius = Math.min(width, height) * 0.45;
     return Array.from({ length: count }, (_, i) => {
-      const angle = (i * 131 * Math.PI) / 180;
-      const r = radius * (0.34 + (i % 4) * 0.07);
+      const angle = (i * 137.5 * Math.PI) / 180;
+      const r = radius * (0.35 + (i % 5) * 0.08);
       return {
-        x: cx + Math.cos(angle) * r * 0.33,
-        y: cy + Math.sin(angle) * r * 0.33,
-        size: 1.2 + (i % 3) * 0.55,
-        opacity: 0.2 + (i % 3) * 0.1
+        x: cx + Math.cos(angle) * r * 0.35,
+        y: cy + Math.sin(angle) * r * 0.35,
+        size: 1.4 + (i % 4) * 0.7,
+        opacity: 0.25 + (i % 3) * 0.12
       };
     });
   }, [width, height, cx, cy]);
@@ -148,10 +148,10 @@ const LayeredShape = ({
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
       <defs>
-        <radialGradient id={gradientId} cx="50%" cy="50%" r="64%">
-          <stop offset="0%" stopColor={withAlpha(brightColor, 0.8)} />
-          <stop offset="48%" stopColor={withAlpha(brightColor, 0.4)} />
-          <stop offset="100%" stopColor={withAlpha(dimColor, 0.16)} />
+        <radialGradient id={gradientId} cx="50%" cy="50%" r="65%">
+          <stop offset="0%" stopColor={withAlpha(brightColor, 0.95)} />
+          <stop offset="50%" stopColor={withAlpha(brightColor, 0.45)} />
+          <stop offset="100%" stopColor={withAlpha(dimColor, 0.2)} />
         </radialGradient>
         <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="12" result="coloredBlur" />
