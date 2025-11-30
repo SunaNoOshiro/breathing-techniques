@@ -10,6 +10,7 @@ export { default as VisualizationPoint } from './Visualization/VisualizationPoin
 
 // Technique Components
 export { default as TechniqueInfo } from './Technique/TechniqueInfo.jsx';
+export { default as TechniqueSelector } from './Technique/TechniqueSelector.jsx';
 
 // Mobile Components
 export { default as MobileHeader } from './Mobile/MobileHeader.jsx';
@@ -17,9 +18,13 @@ export { default as MobileBottomNav } from './Mobile/MobileBottomNav.jsx';
 
 // Desktop Components
 export { default as DesktopControlPanel } from './Desktop/DesktopControlPanel.jsx';
+export { default as DesktopStatus } from './Desktop/DesktopStatus.jsx';
 
 // Settings Components
 export { default as SettingsScreen } from './Settings/SettingsScreen.jsx';
+
+// Common Components
+export { default as PreferenceToggle } from './Common/PreferenceToggle.jsx';
 
 // Error Boundary
 export { default as ErrorBoundary } from './ErrorBoundary.jsx';

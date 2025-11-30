@@ -5,9 +5,7 @@
 
 import React from 'react';
 import { useThemeColors } from '../../contexts/ThemeContext.jsx';
-import { useLocalization } from '../../contexts/LocalizationContext.jsx';
-import { techniqueRegistry } from '../../techniques/TechniqueRegistry.js';
-import CustomDropdown from '../Common/CustomDropdown.jsx';
+import TechniqueSelector from '../Technique/TechniqueSelector.jsx';
 
 /**
  * Mobile Header Component
@@ -15,21 +13,10 @@ import CustomDropdown from '../Common/CustomDropdown.jsx';
  */
 const MobileHeader = ({ selectedTechniqueId, onTechniqueChange }) => {
   const currentColors = useThemeColors();
-  const { t } = useLocalization();
-
-  // Get technique metadata for dropdown with translations
-  const techniqueMetadata = React.useMemo(() => {
-    return techniqueRegistry.getTechniqueMetadata().map(technique => ({
-      ...technique,
-      name: t(`techniques.${technique.id}.name`) || technique.name,
-      description: t(`techniques.${technique.id}.description`) || technique.description,
-      benefits: t(`techniques.${technique.id}.benefits`) || technique.benefits
-    }));
-  }, [t]);
 
   return (
-    <div 
-      className="mobile-header" 
+    <div
+      className="mobile-header"
       style={{ 
         padding: '8px',
         borderBottom: `1px solid ${currentColors.border}`,
@@ -41,16 +28,12 @@ const MobileHeader = ({ selectedTechniqueId, onTechniqueChange }) => {
         boxSizing: 'border-box'
       }}
     >
-      {/* Technique Selection */}
       <div style={{ flex: 1 }}>
-        <CustomDropdown 
-          value={selectedTechniqueId}
-          options={techniqueMetadata.map(technique => ({
-            value: technique.id,
-            label: technique.name
-          }))}
+        <TechniqueSelector
+          selectedTechniqueId={selectedTechniqueId}
           onChange={onTechniqueChange}
-          colors={currentColors}
+          hideLabel
+          compact
         />
       </div>
     </div>

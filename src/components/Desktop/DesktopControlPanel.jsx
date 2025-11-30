@@ -6,8 +6,9 @@
 import React from 'react';
 import { useThemeColors } from '../../contexts/ThemeContext.jsx';
 import { useLocalization } from '../../contexts/LocalizationContext.jsx';
-import { techniqueRegistry } from '../../techniques/TechniqueRegistry.js';
 import CustomDropdown from '../Common/CustomDropdown.jsx';
+import TechniqueSelector from '../Technique/TechniqueSelector.jsx';
+import PreferenceToggle from '../Common/PreferenceToggle.jsx';
 
 /**
  * Desktop Control Panel Component
@@ -27,16 +28,6 @@ const DesktopControlPanel = ({
 }) => {
   const currentColors = useThemeColors();
   const { t, availableLanguages } = useLocalization();
-
-  // Get technique metadata for dropdown with translations
-  const techniqueMetadata = React.useMemo(() => {
-    return techniqueRegistry.getTechniqueMetadata().map(technique => ({
-      ...technique,
-      name: t(`techniques.${technique.id}.name`) || technique.name,
-      description: t(`techniques.${technique.id}.description`) || technique.description,
-      benefits: t(`techniques.${technique.id}.benefits`) || technique.benefits
-    }));
-  }, [t]);
 
   // Get theme names for dropdown
   const themeNames = React.useMemo(() => {
@@ -64,26 +55,10 @@ const DesktopControlPanel = ({
       }}
     >
       {/* Technique Selection */}
-      <div>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '14px', 
-          marginBottom: '8px', 
-          fontWeight: '600',
-          color: currentColors.text
-        }}>
-          {t('technique')}
-        </label>
-        <CustomDropdown 
-          value={selectedTechniqueId}
-          options={techniqueMetadata.map(technique => ({
-            value: technique.id,
-            label: technique.name
-          }))}
-          onChange={onTechniqueChange}
-          colors={currentColors}
-        />
-      </div>
+      <TechniqueSelector
+        selectedTechniqueId={selectedTechniqueId}
+        onChange={onTechniqueChange}
+      />
 
       {/* Language Selection */}
       <div>
@@ -130,118 +105,26 @@ const DesktopControlPanel = ({
       </div>
 
       {/* Sound Control */}
-      <div>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '14px', 
-          marginBottom: '8px', 
-          fontWeight: '600',
-          color: currentColors.text
-        }}>
-          {t('sound')}
-        </label>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            fontSize: '16px',
-            color: currentColors.text,
-            cursor: 'pointer'
-          }}>
-            <input 
-              type="radio" 
-              name="sound" 
-              checked={soundOn} 
-              onChange={() => onSoundChange(true)}
-              style={{ 
-                transform: 'scale(1.2)',
-                accentColor: currentColors.accent,
-                cursor: 'pointer'
-              }}
-            />
-            {t('on')}
-          </label>
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            fontSize: '16px',
-            color: currentColors.text,
-            cursor: 'pointer'
-          }}>
-            <input 
-              type="radio" 
-              name="sound" 
-              checked={!soundOn} 
-              onChange={() => onSoundChange(false)}
-              style={{ 
-                transform: 'scale(1.2)',
-                accentColor: currentColors.accent,
-                cursor: 'pointer'
-              }}
-            />
-            {t('off')}
-          </label>
-        </div>
-      </div>
+      <PreferenceToggle
+        name="sound"
+        label={t('sound')}
+        checked={soundOn}
+        onChange={onSoundChange}
+        onLabel={t('on')}
+        offLabel={t('off')}
+        colors={currentColors}
+      />
 
       {/* Vibration Control */}
-      <div>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '14px', 
-          marginBottom: '8px', 
-          fontWeight: '600',
-          color: currentColors.text
-        }}>
-          {t('vibration')}
-        </label>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            fontSize: '16px',
-            color: currentColors.text,
-            cursor: 'pointer'
-          }}>
-            <input 
-              type="radio" 
-              name="vibration" 
-              checked={vibrateOn} 
-              onChange={() => onVibrationChange(true)}
-              style={{ 
-                transform: 'scale(1.2)',
-                accentColor: currentColors.accent,
-                cursor: 'pointer'
-              }}
-            />
-            {t('on')}
-          </label>
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            fontSize: '16px',
-            color: currentColors.text,
-            cursor: 'pointer'
-          }}>
-            <input 
-              type="radio" 
-              name="vibration" 
-              checked={!vibrateOn} 
-              onChange={() => onVibrationChange(false)}
-              style={{ 
-                transform: 'scale(1.2)',
-                accentColor: currentColors.accent,
-                cursor: 'pointer'
-              }}
-            />
-            {t('off')}
-          </label>
-        </div>
-      </div>
+      <PreferenceToggle
+        name="vibration"
+        label={t('vibration')}
+        checked={vibrateOn}
+        onChange={onVibrationChange}
+        onLabel={t('on')}
+        offLabel={t('off')}
+        colors={currentColors}
+      />
     </div>
   );
 };
