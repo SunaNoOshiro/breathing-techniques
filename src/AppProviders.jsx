@@ -8,6 +8,7 @@ import { ServicesProvider } from './contexts/ServicesContext.jsx';
 import { BreathingProvider } from './contexts/BreathingContext.jsx';
 import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import { LocalizationProvider } from './contexts/LocalizationContext.jsx';
+import Logger from './utils/Logger.js';
 
 // Import services
 import { AudioService } from './services/AudioService.js';
