@@ -3,7 +3,7 @@
  * Renders the human figure with animated lungs and diaphragm
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ANIMATION_CONFIG } from '../../utils/animationUtils.js';
 import { useLocalization } from '../../contexts/LocalizationContext.jsx';
@@ -68,6 +68,22 @@ const BreathingFigure = ({
     green: '#34D399'
   };
 
+  const auraId = useMemo(() => `figure-aura-${Math.random().toString(36).slice(2)}`, []);
+  const glowId = useMemo(() => `figure-glow-${Math.random().toString(36).slice(2)}`, []);
+  const starField = useMemo(() => {
+    const count = 14;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i * 137 * Math.PI) / 180;
+      const r = 120 + (i % 5) * 10;
+      return {
+        x: 130 + Math.cos(angle) * r * 0.45,
+        y: 170 + Math.sin(angle) * r * 0.35,
+        size: 1.4 + (i % 4) * 0.6,
+        opacity: 0.25 + (i % 3) * 0.1
+      };
+    });
+  }, []);
+
   // Use precise, non-looping transitions for phase-driven updates
   const lungTransition = ANIMATION_CONFIG.lungScale;
 
@@ -121,44 +137,76 @@ const BreathingFigure = ({
         transform: 'translate(-50%, -50%)'
       }}
     >
-      <motion.svg 
+      <motion.svg
         width={figureDimensions.width}
         height={figureDimensions.height}
-        viewBox="0 0 260 340" 
+        viewBox="0 0 260 340"
         aria-label={`Phase: ${localizedPhaseName} (${safeCurrentPhase?.timeLeft || 0}s)`}
       >
+        <defs>
+          <radialGradient id={auraId} cx="50%" cy="45%" r="65%">
+            <stop offset="0%" stopColor={`${safeCurrentColors.green}aa`} />
+            <stop offset="60%" stopColor={`${safeCurrentColors.stroke}55`} />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+          <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="16" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <g filter={`url(#${glowId})`}>
+          <circle cx="130" cy="170" r="140" fill={`url(#${auraId})`} />
+          {starField.map((star, idx) => (
+            <circle
+              key={`figure-star-${idx}`}
+              cx={star.x}
+              cy={star.y}
+              r={star.size}
+              fill={safeCurrentColors.green}
+              opacity={star.opacity}
+            />
+          ))}
+        </g>
+
         {/* Head */}
-        <circle 
-          cx="130" 
-          cy="55" 
-          r="35" 
+        <circle
+          cx="130"
+          cy="55"
+          r="35"
           fill={safeCurrentColors.panel} 
-          stroke={safeCurrentColors.stroke} 
-          strokeWidth="3" 
+          stroke={safeCurrentColors.stroke}
+          strokeWidth="3"
+          style={{ filter: `url(#${glowId})` }}
         />
-        
+
         {/* Body */}
-        <path 
-          d="M70 100 Q130 80 190 100 V260 Q130 300 70 260 Z" 
-          fill={safeCurrentColors.panel} 
-          stroke={safeCurrentColors.stroke} 
-          strokeWidth="3" 
+        <path
+          d="M70 100 Q130 80 190 100 V260 Q130 300 70 260 Z"
+          fill={safeCurrentColors.panel}
+          stroke={safeCurrentColors.stroke}
+          strokeWidth="3"
+          style={{ filter: `url(#${glowId})` }}
         />
-        
+
         {/* Spine */}
-        <line 
-          x1="130" 
-          y1="110" 
-          x2="130" 
-          y2="230" 
-          stroke={safeCurrentColors.stroke} 
-          strokeWidth="3" 
+        <line
+          x1="130"
+          y1="110"
+          x2="130"
+          y2="230"
+          stroke={safeCurrentColors.stroke}
+          strokeWidth="3"
+          style={{ filter: `url(#${glowId})` }}
         />
-        
+
         {/* Neck */}
-        <path 
-          d="M128 95 L132 95 L132 120 L128 120 Z" 
-          fill={safeCurrentColors.stroke} 
+        <path
+          d="M128 95 L132 95 L132 120 L128 120 Z"
+          fill={safeCurrentColors.stroke}
         />
 
         {/* Left Lung */}
