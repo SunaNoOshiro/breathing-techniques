@@ -3,7 +3,7 @@
  * Uses SOLID principles and design patterns with extracted components
  */
 
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, useMemo } from 'react';
 import { useLocalization } from './contexts/LocalizationContext.jsx';
 import { useBreathingSession, useAccessibility, usePreferences } from './hooks/index.js';
 import { useThemeColors, useTheme } from './contexts/ThemeContext.jsx';
@@ -298,108 +298,132 @@ export default function BreathingApp() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  const backgroundLayers = useMemo(() => {
+    const accentVeil = `${currentColors.accent || '#38bdf8'}22`;
+    const blueVeil = `${currentColors.blue || '#38bdf8'}18`;
+    const base = currentColors.bg || '#0c111c';
+    const surface = currentColors.panel || '#111a2b';
+
+    return `radial-gradient(circle at 18% 18%, ${accentVeil}, transparent 42%), ` +
+      `radial-gradient(circle at 82% 0%, ${blueVeil}, transparent 34%), ` +
+      `linear-gradient(135deg, ${base}, ${surface})`;
+  }, [currentColors]);
+
   return (
     <ErrorBoundary>
-      <div 
-        className="breathing-app" 
-        style={{ 
-          background: currentColors.bg, 
+      <div
+        className="breathing-app"
+        style={{
+          background: backgroundLayers,
           color: currentColors.text,
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: isDesktop ? 'row' : 'column'
+          minHeight: '100vh'
         }}
         role="main"
         aria-label={t('breathingApp')}
         tabIndex={-1}
       >
-      {/* Settings Screen */}
-      {showSettings && (
-        <Suspense fallback={<AnimatedLoading label={t('loadingSettings')} />}>
-          <SettingsScreen
-            onClose={handleSettingsClose}
-            currentLanguage={currentLanguage}
-            onLanguageChange={changeLanguage}
-            selectedThemeKey={selectedThemeKey}
-            onThemeChange={handleThemeChange}
-            soundOn={soundOn}
-            onSoundChange={handleSoundChange}
-            vibrateOn={vibrateOn}
-            onVibrationChange={handleVibrationChange}
-          />
-        </Suspense>
-      )}
-      
-      {/* Desktop Layout: Left Control Panel */}
-      {isDesktop && (
-        <Suspense fallback={<AnimatedLoading label={t('loadingControls')} />}>
-          <DesktopControlPanel
-            selectedTechniqueId={selectedTechniqueId}
-            onTechniqueChange={handleTechniqueChange}
-            currentLanguage={currentLanguage}
-            onLanguageChange={changeLanguage}
-            selectedThemeKey={selectedThemeKey}
-            onThemeChange={handleThemeChange}
-            soundOn={soundOn}
-            onSoundChange={handleSoundChange}
-            vibrateOn={vibrateOn}
-            onVibrationChange={handleVibrationChange}
-          />
-        </Suspense>
-      )}
+        <div
+          className="content-shell"
+          style={{
+            display: 'flex',
+            flexDirection: isDesktop ? 'row' : 'column',
+            gap: isDesktop ? 18 : 12
+          }}
+        >
+          {/* Settings Screen */}
+          {showSettings && (
+            <Suspense fallback={<AnimatedLoading label={t('loadingSettings')} />}>
+              <SettingsScreen
+                onClose={handleSettingsClose}
+                currentLanguage={currentLanguage}
+                onLanguageChange={changeLanguage}
+                selectedThemeKey={selectedThemeKey}
+                onThemeChange={handleThemeChange}
+                soundOn={soundOn}
+                onSoundChange={handleSoundChange}
+                vibrateOn={vibrateOn}
+                onVibrationChange={handleVibrationChange}
+              />
+            </Suspense>
+          )}
 
-      {/* Mobile Layout: Header with Technique Selection */}
-      {!isDesktop && (
-        <MobileHeader
-          selectedTechniqueId={selectedTechniqueId}
-          onTechniqueChange={handleTechniqueChange}
-        />
-      )}
+          {/* Desktop Layout: Left Control Panel */}
+          {isDesktop && (
+            <Suspense fallback={<AnimatedLoading label={t('loadingControls')} />}>
+              <DesktopControlPanel
+                selectedTechniqueId={selectedTechniqueId}
+                onTechniqueChange={handleTechniqueChange}
+                currentLanguage={currentLanguage}
+                onLanguageChange={changeLanguage}
+                selectedThemeKey={selectedThemeKey}
+                onThemeChange={handleThemeChange}
+                soundOn={soundOn}
+                onSoundChange={handleSoundChange}
+                vibrateOn={vibrateOn}
+                onVibrationChange={handleVibrationChange}
+              />
+            </Suspense>
+          )}
 
-      {/* Main Content Area */}
-      <div 
-        className="main-content" 
-        style={{ 
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: isDesktop ? '24px' : '8px'
-        }}
-      >
-        {/* Technique Info */}
-        <TechniqueErrorBoundary>
-          <Suspense fallback={<AnimatedLoading label={t('loadingTechnique')} />}>
-            <TechniqueInfo />
-          </Suspense>
-        </TechniqueErrorBoundary>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: isDesktop ? 16 : 10 }}>
+            {/* Mobile Layout: Header with Technique Selection */}
+            {!isDesktop && (
+              <MobileHeader
+                selectedTechniqueId={selectedTechniqueId}
+                onTechniqueChange={handleTechniqueChange}
+              />
+            )}
 
-        {/* Visualization Container */}
-        <VisualizationErrorBoundary>
-          <Suspense fallback={<AnimatedLoading label={t('loadingVisualization')} />}>
-            <VisualizationContainer />
-          </Suspense>
-        </VisualizationErrorBoundary>
+            {/* Main Content Area */}
+            <div
+              className="main-content panel-card"
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: isDesktop ? '24px' : '12px',
+                gap: isDesktop ? 18 : 12,
+                maxWidth: '980px',
+                width: '100%',
+                margin: '0 auto'
+              }}
+            >
+              {/* Technique Info */}
+              <TechniqueErrorBoundary>
+                <Suspense fallback={<AnimatedLoading label={t('loadingTechnique')} />}>
+                  <TechniqueInfo />
+                </Suspense>
+              </TechniqueErrorBoundary>
 
-        {/* Desktop Status Display */}
-        {isDesktop && (
-          <DesktopStatus
-            currentPhase={currentPhase}
-            isRunning={isRunning}
-            isPaused={isPaused}
-            onPlayPause={handlePlayPause}
-          />
-        )}
-      </div>
+              {/* Visualization Container */}
+              <VisualizationErrorBoundary>
+                <Suspense fallback={<AnimatedLoading label={t('loadingVisualization')} />}>
+                  <VisualizationContainer />
+                </Suspense>
+              </VisualizationErrorBoundary>
 
-      {/* Mobile Bottom Navigation Bar */}
-      {!isDesktop && (
-        <MobileBottomNav
-          onSettingsClick={handleSettingsClick}
-          onPlayPause={handlePlayPause}
-        />
-      )}
+              {/* Desktop Status Display */}
+              {isDesktop && (
+                <DesktopStatus
+                  currentPhase={currentPhase}
+                  isRunning={isRunning}
+                  isPaused={isPaused}
+                  onPlayPause={handlePlayPause}
+                />
+              )}
+            </div>
+
+            {/* Mobile Bottom Navigation Bar */}
+            {!isDesktop && (
+              <MobileBottomNav
+                onSettingsClick={handleSettingsClick}
+                onPlayPause={handlePlayPause}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </ErrorBoundary>
   );

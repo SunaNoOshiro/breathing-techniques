@@ -5,6 +5,10 @@ theme: Тема
 sound: Звук
 vibration: Вібрація
 technique: Техніка
+chooseTechnique: Оберіть темп дихання, що вам підходить
+preferences: Налаштування
+languageDescription: Оберіть мову інтерфейсу
+themeDescription: Підберіть палітру, яка буде комфортною
 on: Увімкнено
 off: Вимкнено
 start: Почати
