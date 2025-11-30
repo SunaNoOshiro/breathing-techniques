@@ -1,7 +1,74 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { VisualizationMode } from '../VisualizationMode.js';
 import BreathingFigure from '../../components/Visualization/BreathingFigure.jsx';
 import VisualizationPoint from '../../components/Visualization/VisualizationPoint.jsx';
+
+const ClassicCosmicBackdrop = ({ width = 0, height = 0, themeColors, currentColors }) => {
+  const cx = width / 2;
+  const cy = height / 2;
+  const gradientId = useMemo(() => `classic-cosmic-${Math.random().toString(36).slice(2)}`, []);
+  const glowId = useMemo(() => `classic-glow-${Math.random().toString(36).slice(2)}`, []);
+  const starField = useMemo(() => {
+    if (!width || !height) return [];
+    const radius = Math.min(width, height) * 0.46;
+    return Array.from({ length: 12 }, (_, i) => {
+      const angle = (i * 123 * Math.PI) / 180;
+      const r = radius * (0.32 + (i % 4) * 0.06);
+      return {
+        x: cx + Math.cos(angle) * r * 0.34,
+        y: cy + Math.sin(angle) * r * 0.34,
+        size: 1 + (i % 4) * 0.45,
+        opacity: 0.18 + (i % 3) * 0.08
+      };
+    });
+  }, [width, height, cx, cy]);
+
+  if (!width || !height) return null;
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient id={gradientId} cx="50%" cy="50%" r="68%">
+          <stop offset="0%" stopColor={themeColors?.active || '#74f9ff'} stopOpacity="0.3" />
+          <stop offset="50%" stopColor={currentColors?.accent || '#7dd3fc'} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={themeColors?.idle || '#0f172a'} stopOpacity="0" />
+        </radialGradient>
+        <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="22" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <g>
+        <circle
+          cx={cx}
+          cy={cy}
+          r={Math.min(width, height) * 0.46}
+          fill={`url(#${gradientId})`}
+          style={{ filter: `url(#${glowId})` }}
+        />
+        {starField.map((star, idx) => (
+          <circle
+            key={`classic-star-${idx}`}
+            cx={star.x}
+            cy={star.y}
+            r={star.size}
+            fill={themeColors?.active || '#7dd3fc'}
+            opacity={star.opacity}
+          />
+        ))}
+      </g>
+    </svg>
+  );
+};
 
 export class ClassicVisualization extends VisualizationMode {
   getKey() { return 'classic'; }
@@ -23,6 +90,12 @@ export class ClassicVisualization extends VisualizationMode {
 
     return (
       <>
+        <ClassicCosmicBackdrop
+          width={containerDimensions?.width}
+          height={containerDimensions?.height}
+          themeColors={themeColors}
+          currentColors={currentColors}
+        />
         {visualizationPoints.map((point, idx) => {
           const isActive = isRunning && idx === activePointIndex;
           const isDone = isRunning && idx <= activePointIndex;

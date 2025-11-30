@@ -97,35 +97,74 @@ const VisualizationPoint = ({
     const halfSize = pointSize / 2;
     // Make font size proportional to point size (40% of point size)
     const fontSize = Math.round(pointSize * 0.4);
-    
+
+    const gradientCore = `radial-gradient(circle at 30% 30%, ${themeColors.active}cc, ${themeColors.active}77, ${themeColors.idle}33)`;
+
     return {
-      position: 'absolute',
-      width: pointSize,
-      height: pointSize,
-      marginLeft: -halfSize,
-      marginTop: -halfSize,
-      left: scaledPosition.x,
-      top: scaledPosition.y,
-      zIndex: 2,
-      border: `2px solid ${isDone ? themeColors.active : (isLightTheme ? currentColors.stroke : themeColors.idle)}`,
-      background: isDone ? themeColors.active : (isLightTheme ? 'rgba(255, 255, 255, 0.8)' : 'transparent'),
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: `${fontSize}px`,
-      fontWeight: '600',
-      boxShadow: isActive ? 
-        `0 0 0 4px ${themeColors.active}33` : 
-        (isDone ? `0 0 0 2px ${themeColors.active}22` : 'none'),
-      color: isDone ? (isLightTheme ? '#ffffff' : '#0B1020') : (isLightTheme ? currentColors.text : themeColors.textIdle),
-      transition: `all ${ANIMATION_CONFIG.dotTransition.duration}ms ${ANIMATION_CONFIG.dotTransition.ease}`,
+      container: {
+        position: 'absolute',
+        width: pointSize,
+        height: pointSize,
+        marginLeft: -halfSize,
+        marginTop: -halfSize,
+        left: scaledPosition.x,
+        top: scaledPosition.y,
+        zIndex: 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+      },
+      glow: {
+        position: 'absolute',
+        width: pointSize * 1.4,
+        height: pointSize * 1.4,
+        borderRadius: '50%',
+        background: `radial-gradient(circle, ${themeColors.active}35, transparent 70%)`,
+        filter: 'blur(14px)',
+        opacity: isActive ? 0.7 : (isDone ? 0.45 : 0.3),
+        transition: `opacity ${ANIMATION_CONFIG.dotTransition.duration}ms ${ANIMATION_CONFIG.dotTransition.ease}`,
+      },
+      ring: {
+        position: 'absolute',
+        width: pointSize * 1.25,
+        height: pointSize * 1.25,
+        borderRadius: '50%',
+        border: `1.5px solid ${isDone ? themeColors.active : (isLightTheme ? currentColors.stroke : themeColors.idle)}`,
+        boxShadow: isActive
+          ? `0 0 18px ${themeColors.active}aa`
+          : `0 0 10px ${themeColors.active}44`,
+        opacity: isActive ? 0.95 : 0.6,
+        transition: `all ${ANIMATION_CONFIG.dotTransition.duration}ms ${ANIMATION_CONFIG.dotTransition.ease}`,
+      },
+      core: {
+        position: 'relative',
+        width: pointSize,
+        height: pointSize,
+        borderRadius: '50%',
+        background: isDone ? gradientCore : (isLightTheme ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.72)'),
+        border: `1.5px solid ${isDone ? themeColors.active : (isLightTheme ? currentColors.stroke : themeColors.idle)}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: `${fontSize}px`,
+        fontWeight: '700',
+        color: isDone ? (isLightTheme ? '#ffffff' : '#0B1020') : (isLightTheme ? currentColors.text : themeColors.textIdle),
+        boxShadow: isActive
+          ? `0 0 0 4px ${themeColors.active}35, inset 0 0 14px ${themeColors.active}aa`
+          : (isDone ? `0 0 0 2px ${themeColors.active}25` : 'none'),
+        transition: `all ${ANIMATION_CONFIG.dotTransition.duration}ms ${ANIMATION_CONFIG.dotTransition.ease}`,
+        backdropFilter: isLightTheme ? 'blur(2px)' : 'none',
+        overflow: 'hidden',
+      }
     };
   }, [pointSize, scaledPosition, isActive, isDone, themeColors, currentColors]);
 
   return (
-    <div style={pointStyles}>
-      {point.label}
+    <div style={pointStyles.container}>
+      <div style={pointStyles.glow} />
+      <div style={pointStyles.ring} />
+      <div style={pointStyles.core}>{point.label}</div>
     </div>
   );
 };

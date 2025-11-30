@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { VisualizationMode } from '../VisualizationMode.js';
 import { computeLungPaintFromTechnique } from '../../utils/colorUtils.js';
 import { ANIMATION_UTILS } from '../../utils/animationUtils.js';
@@ -62,8 +62,7 @@ function RotatingShapeWrapper(props) {
     currentTechnique,
     currentPhase,
     currentColors,
-    containerDimensions,
-    isRunning
+    containerDimensions
   } = props;
 
   const phaseKey = currentPhase?.phase?.key || '';
@@ -141,13 +140,11 @@ function RotatingShapeWrapper(props) {
     const dimColor = withAlpha(paint.fill, 0.18);
 
     return { baseSize, progress, stepsCount: Math.round(duration), brightColor, dimColor };
-  }, [currentTechnique, currentPhase, currentColors, width, height]);
+  }, [currentTechnique, currentPhase, currentColors, width, height, withAlpha]);
 
   const { baseSize, progress, stepsCount, brightColor, dimColor } = computed;
   const cx = width / 2;
   const cy = height / 2;
-
-  if (baseSize <= 0) return null;
 
   const totalLayers = Math.max(2, stepsCount);
   const scaled = progress * totalLayers;
@@ -163,15 +160,74 @@ function RotatingShapeWrapper(props) {
   const sides = baseRenderer?.sides || 3;
   const rotationPerLayer = 360 / sides / 2;
 
-  const smooth = ANIMATION_UTILS.transition({ property: 'opacity, transform, fill', duration: 400, easing: 'ease-in-out' });
+  const smooth = ANIMATION_UTILS.transition({ property: 'opacity, transform, fill, stroke', duration: 400, easing: 'ease-in-out' });
+  const gradientId = useMemo(() => `rotating-gradient-${Math.random().toString(36).slice(2)}`, []);
+  const glowId = useMemo(() => `rotating-glow-${Math.random().toString(36).slice(2)}`, []);
+
+  const starField = useMemo(() => {
+    if (!width || !height) return [];
+    const count = 14;
+    const radius = Math.min(width, height) * 0.5;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i * 104 * Math.PI) / 180;
+      const r = radius * (0.3 + (i % 4) * 0.07);
+      return {
+        x: cx + Math.cos(angle) * r * 0.38,
+        y: cy + Math.sin(angle) * r * 0.38,
+        size: 1.15 + (i % 4) * 0.45,
+        opacity: 0.14 + (i % 3) * 0.09
+      };
+    });
+  }, [width, height, cx, cy]);
+
+  if (baseSize <= 0) return null;
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
+      <defs>
+        <radialGradient id={gradientId} cx="50%" cy="50%" r="68%">
+          <stop offset="0%" stopColor={withAlpha(brightColor, 0.85)} />
+          <stop offset="58%" stopColor={withAlpha(brightColor, 0.45)} />
+          <stop offset="100%" stopColor={withAlpha(dimColor, 0.12)} />
+        </radialGradient>
+        <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="12" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g>
+        {starField.map((star, idx) => (
+          <circle
+            key={`rot-star-${idx}`}
+            cx={star.x}
+            cy={star.y}
+            r={star.size}
+            fill={withAlpha(brightColor, star.opacity)}
+            opacity={star.opacity}
+          />
+        ))}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={baseSize * 0.53}
+          fill="none"
+          stroke={`url(#${gradientId})`}
+          strokeWidth={Math.max(1.25, baseSize * 0.009)}
+          strokeOpacity={0.2}
+          style={{ filter: `url(#${glowId})` }}
+        />
+      </g>
+
       {sizeFactors.map((factor, i) => {
         const size = baseSize * factor;
         let color = dimColor;
         let opacity = 0.9;
-        
+        let fillTarget = color;
+
         if (i < activeIndex) {
           color = dimColor;
           opacity = 0.35;
@@ -180,10 +236,12 @@ function RotatingShapeWrapper(props) {
           const dimOpacity = 0.35 * localT;
           color = brightColor;
           opacity = brightOpacity + dimOpacity;
+          fillTarget = `url(#${gradientId})`;
         } else if (i === activeIndex + 1) {
           const appear = 1.0 * localT;
           color = brightColor;
           opacity = appear;
+          fillTarget = `url(#${gradientId})`;
         } else {
           color = 'transparent';
           opacity = 0;
@@ -193,8 +251,8 @@ function RotatingShapeWrapper(props) {
         const rotation = i * rotationPerLayer;
 
         return (
-          <g key={i} style={{ ...smooth, opacity }} transform={`rotate(${rotation} ${cx} ${cy})`}>
-            {baseRenderer && baseRenderer.render(cx, cy, size, color)}
+          <g key={i} style={{ ...smooth, opacity, filter: `url(#${glowId})` }} transform={`rotate(${rotation} ${cx} ${cy})`}>
+            {baseRenderer && baseRenderer.render(cx, cy, size, fillTarget)}
           </g>
         );
       })}
