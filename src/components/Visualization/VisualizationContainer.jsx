@@ -142,22 +142,23 @@ const VisualizationContainer = () => {
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="visualization-container" 
-      style={{ 
+      className="visualization-container"
+      style={{
         position: 'relative',
         width: `${containerDimensions.width}px`,
         height: `${containerDimensions.height}px`,
         maxWidth: isMobile ? 'calc(100vw - 16px)' : `${containerDimensions.width}px`,
-        background: currentColors.panel,
-        border: `2px solid ${currentColors.border}`,
-        borderRadius: '12px',
+        background: `linear-gradient(145deg, ${currentColors.panel}f2, ${currentColors.panel})`,
+        border: `1.5px solid ${currentColors.border}`,
+        borderRadius: '22px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         boxSizing: 'border-box',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: `0 24px 60px ${currentColors.shadow || 'rgba(0,0,0,0.28)'}`
       }}
     >
       {visualizationModeManager.render(currentModeKey, {
@@ -176,74 +177,41 @@ const VisualizationContainer = () => {
       {/* Visualization mode label */}
       <div style={{
         position: 'absolute',
-        top: 8,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: `${currentColors.panel}dd`,
+        top: 10,
+        left: 12,
+        background: `${currentColors.panel}e8`,
         backdropFilter: 'blur(8px)',
         border: `1px solid ${currentColors.border}`,
-        borderRadius: '20px',
-        padding: '6px 16px',
+        borderRadius: '16px',
+        padding: '6px 14px',
         color: currentColors.text,
-        fontSize: '14px',
-        fontWeight: '500',
+        fontSize: '13px',
+        fontWeight: '600',
         whiteSpace: 'nowrap',
         opacity: 0.9,
-        pointerEvents: 'none',
         userSelect: 'none'
       }}>
         {t(visualizationModeManager.getMode(currentModeKey)?.getLabel() || 'visualization.classic')}
       </div>
 
-      {/* Left/Right arrow controls */}
-      <button
-        type="button"
-        aria-label={t('prevVisualization')}
-        onClick={goPrevMode}
-        style={{
-          position: 'absolute',
-          left: 8,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          background: currentColors.panel,
-          border: `1px solid ${currentColors.border}`,
-          color: currentColors.text,
-          borderRadius: 999,
-          width: 36,
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          opacity: 0.8
-        }}
-      >
-        ←
-      </button>
-      <button
-        type="button"
-        aria-label={t('nextVisualization')}
-        onClick={goNextMode}
-        style={{
-          position: 'absolute',
-          right: 8,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          background: currentColors.panel,
-          border: `1px solid ${currentColors.border}`,
-          color: currentColors.text,
-          borderRadius: 999,
-          width: 36,
-          height: 36,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          opacity: 0.8
-        }}
-      >
-        →
-      </button>
+      <div className="visualization-nav" aria-label={t('visualizationMode')}>
+        <button
+          type="button"
+          aria-label={t('prevVisualization')}
+          onClick={goPrevMode}
+          className="pill-button"
+        >
+          ←
+        </button>
+        <button
+          type="button"
+          aria-label={t('nextVisualization')}
+          onClick={goNextMode}
+          className="pill-button"
+        >
+          →
+        </button>
+      </div>
     </div>
   );
 };

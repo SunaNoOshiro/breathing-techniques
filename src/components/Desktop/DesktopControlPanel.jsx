@@ -42,89 +42,79 @@ const DesktopControlPanel = ({
   }, [t]);
 
   return (
-    <div 
-      className="desktop-control-panel" 
+    <div
+      className="desktop-control-panel panel-card"
       style={{
-        width: '300px',
-        background: currentColors.panel,
-        borderRight: `1px solid ${currentColors.border}`,
-        padding: '24px',
+        width: '320px',
+        padding: '26px 22px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '18px',
+        position: 'sticky',
+        top: 12,
+        alignSelf: 'flex-start'
       }}
     >
-      {/* Technique Selection */}
-      <TechniqueSelector
-        selectedTechniqueId={selectedTechniqueId}
-        onChange={onTechniqueChange}
-      />
+      <div className="control-stack">
+        <div>
+          <div className="section-title">{t('technique')}</div>
+          <div className="section-hint">{t('chooseTechnique')}</div>
+          <TechniqueSelector
+            selectedTechniqueId={selectedTechniqueId}
+            onChange={onTechniqueChange}
+          />
+        </div>
 
-      {/* Language Selection */}
-      <div>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '14px', 
-          marginBottom: '8px', 
-          fontWeight: '600',
-          color: currentColors.text
-        }}>
-          {t('language')}
-        </label>
-        <CustomDropdown 
-          value={currentLanguage}
-          options={availableLanguages.map(lang => ({
-            value: lang.code,
-            label: lang.name
-          }))}
-          onChange={onLanguageChange}
+        <div>
+          <div className="section-title">{t('language')}</div>
+          <div className="section-hint">{t('languageDescription')}</div>
+          <CustomDropdown
+            value={currentLanguage}
+            options={availableLanguages.map(lang => ({
+              value: lang.code,
+              label: lang.name
+            }))}
+            onChange={onLanguageChange}
+            colors={currentColors}
+          />
+        </div>
+
+        <div>
+          <div className="section-title">{t('theme')}</div>
+          <div className="section-hint">{t('themeDescription') || t('theme')}</div>
+          <CustomDropdown
+            value={selectedThemeKey}
+            options={themeNames.map(theme => ({
+              value: theme.key,
+              label: theme.name
+            }))}
+            onChange={onThemeChange}
+            colors={currentColors}
+          />
+        </div>
+      </div>
+
+      <div className="control-stack" style={{ marginTop: 4 }}>
+        <div className="section-title">{t('preferences')}</div>
+        <PreferenceToggle
+          name="sound"
+          label={t('sound')}
+          checked={soundOn}
+          onChange={onSoundChange}
+          onLabel={t('on')}
+          offLabel={t('off')}
+          colors={currentColors}
+        />
+        <PreferenceToggle
+          name="vibration"
+          label={t('vibration')}
+          checked={vibrateOn}
+          onChange={onVibrationChange}
+          onLabel={t('on')}
+          offLabel={t('off')}
           colors={currentColors}
         />
       </div>
-
-      {/* Theme Selection */}
-      <div>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '14px', 
-          marginBottom: '8px', 
-          fontWeight: '600',
-          color: currentColors.text
-        }}>
-          {t('theme')}
-        </label>
-        <CustomDropdown 
-          value={selectedThemeKey}
-          options={themeNames.map(theme => ({
-            value: theme.key,
-            label: theme.name
-          }))}
-          onChange={onThemeChange}
-          colors={currentColors}
-        />
-      </div>
-
-      {/* Sound Control */}
-      <PreferenceToggle
-        name="sound"
-        label={t('sound')}
-        checked={soundOn}
-        onChange={onSoundChange}
-        onLabel={t('on')}
-        offLabel={t('off')}
-        colors={currentColors}
-      />
-
-      {/* Vibration Control */}
-      <PreferenceToggle
-        name="vibration"
-        label={t('vibration')}
-        checked={vibrateOn}
-        onChange={onVibrationChange}
-        onLabel={t('on')}
-        offLabel={t('off')}
-        colors={currentColors}
-      />
     </div>
   );
 };
