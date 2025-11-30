@@ -40,6 +40,15 @@ const LayeredShape = ({
 }) => {
   const { width, height } = containerDimensions || { width: 0, height: 0 };
 
+  const gradientId = useMemo(
+    () => `layered-cosmic-${Math.random().toString(36).slice(2)}`,
+    []
+  );
+  const glowId = useMemo(
+    () => `layered-glow-${Math.random().toString(36).slice(2)}`,
+    []
+  );
+
   const computed = useMemo(() => {
     if (!currentTechnique || !currentPhase || !currentPhase.phase?.key) {
       return {
@@ -73,7 +82,21 @@ const LayeredShape = ({
   const cx = width / 2;
   const cy = height / 2;
 
-  if (baseSize <= 0) return null;
+  const starField = useMemo(() => {
+    if (!width || !height) return [];
+    const count = 18;
+    const radius = Math.min(width, height) * 0.45;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i * 137.5 * Math.PI) / 180;
+      const r = radius * (0.35 + (i % 5) * 0.08);
+      return {
+        x: cx + Math.cos(angle) * r * 0.35,
+        y: cy + Math.sin(angle) * r * 0.35,
+        size: 1.4 + (i % 4) * 0.7,
+        opacity: 0.25 + (i % 3) * 0.12
+      };
+    });
+  }, [width, height, cx, cy]);
 
   const totalLayers = Math.max(2, stepsCount);
   const scaled = progress * totalLayers;
@@ -118,10 +141,39 @@ const LayeredShape = ({
     }
   }, [phaseKey, stepsCount, ratio, width, height, cx, cy, brightColor]);
 
+  if (baseSize <= 0) return null;
+
   const smooth = ANIMATION_UTILS.transition({ property: 'opacity, transform, fill', duration: 400, easing: 'ease-in-out' });
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
+      <defs>
+        <radialGradient id={gradientId} cx="50%" cy="50%" r="65%">
+          <stop offset="0%" stopColor={withAlpha(brightColor, 0.95)} />
+          <stop offset="50%" stopColor={withAlpha(brightColor, 0.45)} />
+          <stop offset="100%" stopColor={withAlpha(dimColor, 0.2)} />
+        </radialGradient>
+        <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="12" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g>
+        {starField.map((star, idx) => (
+          <circle
+            key={`star-${idx}`}
+            cx={star.x}
+            cy={star.y}
+            r={star.size}
+            fill={withAlpha(brightColor, star.opacity)}
+            opacity={star.opacity}
+          />
+        ))}
+      </g>
       {prevSnapshot && (
         <g style={{ ...smooth, opacity: prevOpacity }}>
           {(rendererSelector
@@ -135,6 +187,7 @@ const LayeredShape = ({
         const size = Math.min(width, height) * 0.75 * factor;
         let color = dimColor;
         let opacity = 0.9;
+        let fillTarget = color;
         if (i < activeIndex) {
           color = dimColor;
           opacity = 0.35;
@@ -143,10 +196,12 @@ const LayeredShape = ({
           const dimOpacity = 0.35 * localT;
           color = brightColor;
           opacity = brightOpacity + dimOpacity;
+          fillTarget = `url(#${gradientId})`;
         } else if (i === activeIndex + 1) {
           const appear = 1.0 * localT;
           color = brightColor;
           opacity = appear;
+          fillTarget = `url(#${gradientId})`;
         } else {
           color = 'transparent';
           opacity = 0;
@@ -154,8 +209,8 @@ const LayeredShape = ({
 
         const rendererForLayer = rendererSelector ? rendererSelector(i, { activeIndex, localT, totalLayers, cx, cy }) : shapeRenderer;
         return (
-          <g key={i} style={{ ...smooth, opacity }}>
-            {rendererForLayer && rendererForLayer.render(cx, cy, size, color)}
+          <g key={i} style={{ ...smooth, opacity, filter: `url(#${glowId})` }}>
+            {rendererForLayer && rendererForLayer.render(cx, cy, size, fillTarget)}
           </g>
         );
       })}
