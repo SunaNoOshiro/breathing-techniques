@@ -3,23 +3,22 @@
  * Uses SOLID principles and design patterns with extracted components
  */
 
-import React, { useState, useEffect, useCallback, Suspense, memo } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useLocalization } from './contexts/LocalizationContext.jsx';
 import { useBreathingSession, useAccessibility, usePreferences } from './hooks/index.js';
 import { useThemeColors, useTheme } from './contexts/ThemeContext.jsx';
 import { useServices } from './contexts/ServicesContext.jsx';
 import { useResponsive } from './hooks/index.js';
-import { useTechnique } from './hooks/index.js';
 import { techniqueRegistry } from './techniques/TechniqueRegistry.js';
-import { LazyComponents, MemoizedComponents } from './performance/PerformanceOptimizations.jsx';
+import { LazyComponents } from './components/lazyComponents.js';
 import { AnimatedLoading } from './animations/BreathingAnimations.jsx';
-import { 
-  ErrorBoundary, 
-  TechniqueErrorBoundary, 
-  VisualizationErrorBoundary,
-  ServiceErrorBoundary 
+import {
+  ErrorBoundary,
+  TechniqueErrorBoundary,
+  VisualizationErrorBoundary
 } from './components/ErrorBoundary.jsx';
 import Logger from './utils/Logger.js';
+import DesktopStatus from './components/Desktop/DesktopStatus.jsx';
 
 // Lazy load heavy components
 const VisualizationContainer = LazyComponents.VisualizationContainer;
@@ -46,21 +45,19 @@ export default function BreathingApp() {
   const [showSettings, setShowSettings] = useState(false);
 
   // Hooks
-  const { 
-    start, 
-    pause, 
-    resume, 
-    stop, 
+  const {
+    start,
+    stop,
     changeTechnique,
-    isRunning, 
-    isPaused, 
-    currentPhase 
+    isRunning,
+    isPaused,
+    currentPhase
   } = useBreathingSession();
-  
+
   const currentColors = useThemeColors();
-  const { setTheme, getCurrentTheme } = useTheme();
+  const { setTheme } = useTheme();
   const { isDesktop } = useResponsive();
-  const { announce, prefersReducedMotion } = useAccessibility();
+  const { announce } = useAccessibility();
   
   // Reactive preferences
   const preferences = usePreferences();
@@ -228,7 +225,9 @@ export default function BreathingApp() {
           try {
             await audioService.initialize();
             audioService.ensureAudioContext?.();
-          } catch (_) {}
+          } catch (error) {
+            Logger.warn('component', 'Failed to warm up audio context', error);
+          }
         }
 
         Logger.debug('component', 'handlePlayPause: Starting session with technique:', currentTechnique.getId());
@@ -270,125 +269,6 @@ export default function BreathingApp() {
       Logger.debug('component', 'VibrationService.setEnabled called with:', enabled);
     }
   }, [setVibrationEnabled, services]);
-
-  // Desktop status display component (memoized for performance)
-  const DesktopStatusDisplay = memo(() => (
-    <div 
-      style={{ 
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '24px',
-        textAlign: 'left',
-        marginTop: '16px',
-        padding: '16px 24px',
-        background: currentColors.panel,
-        borderRadius: '16px',
-        border: `1px solid ${currentColors.border}`,
-        maxWidth: '720px',
-        width: '100%',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
-      }}
-      role="status"
-      aria-live="polite"
-      aria-label={t('sessionStatus')}
-    >
-      {/* Left side: phase + time */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start', flex: 1 }}>
-        <div 
-          style={{ 
-            fontSize: '24px', 
-            fontWeight: '700', 
-            color: currentColors.accent,
-            textTransform: 'uppercase',
-            letterSpacing: '2px'
-          }}
-          aria-label={t('currentPhase')}
-        >
-          {currentPhase ? t(currentPhase.key || currentPhase.phase?.key || 'inhale') : t('ready')}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-          <div 
-            style={{ 
-              fontSize: '40px', 
-              fontWeight: '300',
-              color: currentColors.text,
-              letterSpacing: '-1px'
-            }}
-            aria-label={t('timeRemaining')}
-          >
-            {currentPhase ? Math.ceil(currentPhase.timeLeft || currentPhase.timeRemaining || currentPhase.duration || 0) : '—'}
-          </div>
-          <div 
-            style={{ 
-              fontSize: '12px', 
-              fontWeight: '500',
-              color: currentColors.text,
-              opacity: 0.7,
-              textTransform: 'none',
-              letterSpacing: '0.5px'
-            }}
-          >
-            {currentPhase ? t('secLeft') : t('pressToStart')}
-          </div>
-        </div>
-      </div>
-
-      {/* Right side: Play/Stop Button */}
-      <button 
-        onClick={handlePlayPause}
-        style={{
-          background: (isRunning || isPaused) 
-            ? '#ef4444' 
-            : currentColors.accent,
-          color: '#ffffff',
-          fontSize: '15px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          padding: '14px 28px',
-          borderRadius: '24px',
-          border: 'none',
-          transition: prefersReducedMotion ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: (isRunning || isPaused)
-            ? '0 4px 12px rgba(239, 68, 68, 0.3)'
-            : `0 4px 12px ${currentColors.accent}40`,
-          minWidth: '140px',
-          textTransform: 'uppercase',
-          letterSpacing: '1px'
-        }}
-        onMouseEnter={(e) => {
-          if (!prefersReducedMotion) {
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = (isRunning || isPaused)
-              ? '0 6px 16px rgba(239, 68, 68, 0.4)'
-              : `0 6px 16px ${currentColors.accent}50`;
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!prefersReducedMotion) {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = (isRunning || isPaused)
-              ? '0 4px 12px rgba(239, 68, 68, 0.3)'
-              : `0 4px 12px ${currentColors.accent}40`;
-          }
-        }}
-        onMouseDown={(e) => {
-          if (!prefersReducedMotion) {
-            e.target.style.transform = 'scale(0.96)';
-          }
-        }}
-        onMouseUp={(e) => {
-          if (!prefersReducedMotion) {
-            e.target.style.transform = 'translateY(-2px)';
-          }
-        }}
-        aria-label={(isRunning || isPaused) ? t('stopSession') : t('startSession')}
-        aria-pressed={isRunning || isPaused}
-      >
-        {(isRunning || isPaused) ? t('stop') : t('start')}
-      </button>
-    </div>
-  ));
 
   // Keyboard navigation handler
   const handleKeyDown = useCallback((e) => {
@@ -503,7 +383,14 @@ export default function BreathingApp() {
         </VisualizationErrorBoundary>
 
         {/* Desktop Status Display */}
-        {isDesktop && <DesktopStatusDisplay />}
+        {isDesktop && (
+          <DesktopStatus
+            currentPhase={currentPhase}
+            isRunning={isRunning}
+            isPaused={isPaused}
+            onPlayPause={handlePlayPause}
+          />
+        )}
       </div>
 
       {/* Mobile Bottom Navigation Bar */}

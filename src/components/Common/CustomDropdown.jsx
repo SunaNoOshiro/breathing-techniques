@@ -92,14 +92,29 @@ const Z_INDEX = {
  * @param {string} props.colors.text - Text color
  * @param {string} props.colors.border - Border color
  * @param {string} props.colors.accent - Accent color for selected state
+ * @param {('sm'|'md')} [props.size='md'] - Sizing preset for the trigger
  * @returns {JSX.Element} CustomDropdown component
  */
-const CustomDropdown = ({ value, options, onChange, colors }) => {
+const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
   // ============================================================================
   // State
   // ============================================================================
-  
+
   const [isOpen, setIsOpen] = React.useState(false);
+
+  const sizing = React.useMemo(() => {
+    if (size === 'sm') {
+      return {
+        padding: '10px 32px 10px 10px',
+        fontSize: '14px'
+      };
+    }
+
+    return {
+      padding: STYLES.TRIGGER.PADDING,
+      fontSize: STYLES.TRIGGER.FONT_SIZE
+    };
+  }, [size]);
   
   // ============================================================================
   // Computed Values
@@ -166,14 +181,14 @@ const CustomDropdown = ({ value, options, onChange, colors }) => {
       aria-expanded={isOpen}
       onClick={handleToggle}
       onKeyDown={handleKeyDown}
-      style={{ 
+      style={{
         width: '100%',
-        padding: STYLES.TRIGGER.PADDING,
+        padding: sizing.padding,
         background: colors.panel,
         color: colors.text,
         border: `${STYLES.TRIGGER.BORDER_WIDTH} solid ${isOpen ? colors.accent : colors.border}`,
         borderRadius: STYLES.TRIGGER.BORDER_RADIUS,
-        fontSize: STYLES.TRIGGER.FONT_SIZE,
+        fontSize: sizing.fontSize,
         cursor: 'pointer',
         userSelect: 'none',
         position: 'relative',
