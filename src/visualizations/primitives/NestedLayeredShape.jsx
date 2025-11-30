@@ -42,15 +42,6 @@ const NestedLayeredShape = ({
 }) => {
   const { width, height } = containerDimensions || { width: 0, height: 0 };
 
-  const gradientId = useMemo(
-    () => `nested-cosmic-${Math.random().toString(36).slice(2)}`,
-    []
-  );
-  const glowId = useMemo(
-    () => `nested-glow-${Math.random().toString(36).slice(2)}`,
-    []
-  );
-
   const computed = useMemo(() => {
     if (!currentTechnique || !currentPhase || !currentPhase.phase?.key) {
       return {
@@ -84,21 +75,7 @@ const NestedLayeredShape = ({
   const cx = width / 2;
   const cy = height / 2;
 
-  const starField = useMemo(() => {
-    if (!width || !height) return [];
-    const count = 22;
-    const radius = Math.min(width, height) * 0.5;
-    return Array.from({ length: count }, (_, i) => {
-      const angle = ((i * 111) % 360) * (Math.PI / 180);
-      const r = radius * (0.25 + (i % 7) * 0.07);
-      return {
-        x: cx + Math.cos(angle) * r * 0.4,
-        y: cy + Math.sin(angle) * r * 0.4,
-        size: 1.2 + (i % 5) * 0.45,
-        opacity: 0.18 + (i % 4) * 0.11
-      };
-    });
-  }, [width, height, cx, cy]);
+  if (baseSize <= 0) return null;
 
   const totalLayers = Math.max(2, stepsCount);
   const scaled = progress * totalLayers;
@@ -255,40 +232,10 @@ const NestedLayeredShape = ({
     }
   }, [phaseKey, stepsCount, sizes, cx, cy, brightColor]);
 
-  if (baseSize <= 0) return null;
-
   const smooth = ANIMATION_UTILS.transition({ property: 'opacity, transform, fill', duration: 400, easing: 'ease-in-out' });
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
-      <defs>
-        <radialGradient id={gradientId} cx="50%" cy="50%" r="70%">
-          <stop offset="0%" stopColor={withAlpha(brightColor, 0.92)} />
-          <stop offset="45%" stopColor={withAlpha(brightColor, 0.55)} />
-          <stop offset="100%" stopColor={withAlpha(dimColor, 0.15)} />
-        </radialGradient>
-        <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="10" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      <g>
-        {starField.map((star, idx) => (
-          <circle
-            key={`nested-star-${idx}`}
-            cx={star.x}
-            cy={star.y}
-            r={star.size}
-            fill={withAlpha(brightColor, star.opacity)}
-            opacity={star.opacity}
-          />
-        ))}
-      </g>
-
       {prevSnapshot && (
         <g style={{ ...smooth, opacity: prevOpacity }}>
           {renderersPerLayer[Math.max(0, Math.min(prevSnapshot.layerIndex, renderersPerLayer.length - 1))]
@@ -311,10 +258,9 @@ const NestedLayeredShape = ({
           color = 'transparent'; opacity = 0;
         }
         const rendererForLayer = renderersPerLayer[i];
-        const fillTarget = (i === activeIndex || i === activeIndex + 1) ? `url(#${gradientId})` : color;
         return (
-          <g key={i} style={{ ...smooth, opacity, filter: `url(#${glowId})` }}>
-            {rendererForLayer && rendererForLayer.render(cx, cy, size, fillTarget)}
+          <g key={i} style={{ ...smooth, opacity }}>
+            {rendererForLayer && rendererForLayer.render(cx, cy, size, color)}
           </g>
         );
       })}
