@@ -36,10 +36,10 @@ import React from 'react';
 /** Styling constants for consistent spacing and sizing */
 const STYLES = {
   TRIGGER: {
-    PADDING: '12px 36px 12px 12px',
+    PADDING: '11px 32px 11px 12px',
     BORDER_WIDTH: '2px',
     BORDER_RADIUS: '8px',
-    FONT_SIZE: '16px',
+    FONT_SIZE: 'clamp(13px, 3.9vw, 15px)',
     FONT_WEIGHT: '500',
     TRANSITION: 'border-color 0.2s ease'
   },
@@ -58,7 +58,7 @@ const STYLES = {
     SHADOW: '0 4px 6px rgba(0, 0, 0, 0.3)'
   },
   OPTION: {
-    PADDING: '12px',
+    PADDING: '11px 12px',
     GAP: '12px',
     TRANSITION: 'background 0.15s ease',
     SELECTED_BG_OPACITY: '20' // Hex opacity value for accent color
@@ -92,29 +92,14 @@ const Z_INDEX = {
  * @param {string} props.colors.text - Text color
  * @param {string} props.colors.border - Border color
  * @param {string} props.colors.accent - Accent color for selected state
- * @param {('sm'|'md')} [props.size='md'] - Sizing preset for the trigger
  * @returns {JSX.Element} CustomDropdown component
  */
-const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
+const CustomDropdown = ({ value, options, onChange, colors, showAllOptions = false }) => {
   // ============================================================================
   // State
   // ============================================================================
-
+  
   const [isOpen, setIsOpen] = React.useState(false);
-
-  const sizing = React.useMemo(() => {
-    if (size === 'sm') {
-      return {
-        padding: '10px 32px 10px 10px',
-        fontSize: '14px'
-      };
-    }
-
-    return {
-      padding: STYLES.TRIGGER.PADDING,
-      fontSize: STYLES.TRIGGER.FONT_SIZE
-    };
-  }, [size]);
   
   // ============================================================================
   // Computed Values
@@ -125,6 +110,25 @@ const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
     () => options.find(opt => opt.value === value),
     [options, value]
   );
+
+  const menuSizing = React.useMemo(() => {
+    const estimatedOptionHeight = 52;
+    const naturalHeight = (options.length * estimatedOptionHeight) + 8;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : naturalHeight;
+    const viewportCap = Math.max(220, viewportHeight - 140);
+
+    if (showAllOptions) {
+      return {
+        maxHeight: `${Math.min(naturalHeight, viewportCap)}px`,
+        overflowY: naturalHeight > viewportCap ? 'auto' : 'visible'
+      };
+    }
+
+    return {
+      maxHeight: STYLES.MENU.MAX_HEIGHT,
+      overflowY: 'auto'
+    };
+  }, [options.length, showAllOptions]);
   
   // ============================================================================
   // Event Handlers
@@ -181,14 +185,15 @@ const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
       aria-expanded={isOpen}
       onClick={handleToggle}
       onKeyDown={handleKeyDown}
-      style={{
+      title={selectedOption?.label || value}
+      style={{ 
         width: '100%',
-        padding: sizing.padding,
+        padding: STYLES.TRIGGER.PADDING,
         background: colors.panel,
         color: colors.text,
         border: `${STYLES.TRIGGER.BORDER_WIDTH} solid ${isOpen ? colors.accent : colors.border}`,
         borderRadius: STYLES.TRIGGER.BORDER_RADIUS,
-        fontSize: sizing.fontSize,
+        fontSize: STYLES.TRIGGER.FONT_SIZE,
         cursor: 'pointer',
         userSelect: 'none',
         position: 'relative',
@@ -196,7 +201,18 @@ const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
         fontWeight: STYLES.TRIGGER.FONT_WEIGHT
       }}
     >
-      {selectedOption?.label || value}
+      <span
+        style={{
+          display: 'block',
+          overflow: 'hidden',
+          maxWidth: '100%',
+          lineHeight: 1.25,
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {selectedOption?.label || value}
+      </span>
       {renderArrow()}
     </div>
   );
@@ -286,8 +302,8 @@ const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
         background: colors.panel,
         border: `${STYLES.MENU.BORDER_WIDTH} solid ${colors.border}`,
         borderRadius: STYLES.MENU.BORDER_RADIUS,
-        maxHeight: STYLES.MENU.MAX_HEIGHT,
-        overflowY: 'auto',
+        maxHeight: menuSizing.maxHeight,
+        overflowY: menuSizing.overflowY,
         zIndex: Z_INDEX.MENU,
         boxShadow: STYLES.MENU.SHADOW
       }}
@@ -318,12 +334,26 @@ const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
           borderBottom: `1px solid ${colors.border}`,
           display: 'flex',
           alignItems: 'center',
+          minWidth: 0,
           gap: STYLES.OPTION.GAP,
           transition: STYLES.OPTION.TRANSITION
         }}
+        title={option.label}
       >
         {renderRadioIndicator(isSelected)}
-        <span>{option.label}</span>
+        <span
+          style={{
+            display: 'block',
+            flex: 1,
+            minWidth: 0,
+            lineHeight: 1.3,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {option.label}
+        </span>
       </div>
     );
   };
@@ -333,7 +363,7 @@ const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
   // ============================================================================
   
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', zIndex: isOpen ? Z_INDEX.MENU : 'auto' }}>
       {renderTrigger()}
       
       {isOpen && (
@@ -365,4 +395,3 @@ const CustomDropdown = ({ value, options, onChange, colors, size = 'md' }) => {
  */
 
 export default CustomDropdown;
-

@@ -19,77 +19,104 @@ const TechniqueInfo = () => {
   const { isDesktop } = useResponsive();
   const { t } = useLocalization();
 
+  // On mobile we keep the canvas as clean as possible;
+  // detailed technique copy lives in settings instead.
+  if (!isDesktop) {
+    return null;
+  }
+
   if (!currentTechnique) {
     return (
-      <div style={{
-        background: currentColors.panel,
-        padding: '16px',
-        borderRadius: '8px',
-        border: `1px solid ${currentColors.border}`,
-        marginBottom: '16px',
-        textAlign: 'center',
-        maxWidth: isDesktop ? '600px' : 'calc(100vw - 16px)',
-        width: isDesktop ? '600px' : 'calc(100vw - 16px)',
-        color: currentColors.text,
-        boxSizing: 'border-box'
-      }}>
-        <div>{t('noTechniqueSelected')}</div>
+      <div
+        className="glass-card glass-card--padded technique-card"
+        style={{
+          marginBottom: '16px',
+          maxWidth: '720px',
+          width: '720px',
+          background: currentColors.panel,
+          borderColor: currentColors.border,
+          color: currentColors.text,
+          boxSizing: 'border-box'
+        }}
+      >
+        <div style={{ textAlign: 'center', fontWeight: 500 }}>
+          {t('noTechniqueSelected')}
+        </div>
       </div>
     );
   }
 
   const techniqueId = currentTechnique.getId();
-  const techniqueName = t(`techniques.${techniqueId}.name`) || currentTechnique.getName();
-  const techniqueDescription = t(`techniques.${techniqueId}.description`) || currentTechnique.getDescription();
-  const techniqueBenefits = t(`techniques.${techniqueId}.benefits`) || currentTechnique.getBenefits();
+  const techniqueName = t(`techniques.${techniqueId}.name`, { fallback: currentTechnique.getName() });
+  const techniqueDescription = t(`techniques.${techniqueId}.description`, {
+    fallback: currentTechnique.getDescription()
+  });
+  const techniqueBenefits = t(`techniques.${techniqueId}.benefits`, {
+    fallback: currentTechnique.getBenefits()
+  });
   const techniquePattern = currentTechnique.getPattern();
 
   return (
-    <div style={{
-      background: currentColors.panel,
-      padding: '16px',
-      borderRadius: '8px',
-      border: `1px solid ${currentColors.border}`,
-      marginBottom: '16px',
-      textAlign: 'center',
-      maxWidth: isDesktop ? '600px' : 'calc(100vw - 16px)',
-      width: isDesktop ? '600px' : 'calc(100vw - 16px)',
-      boxSizing: 'border-box'
-    }}>
+    <div
+      className="glass-card glass-card--padded technique-card"
+      style={{
+        marginBottom: '16px',
+        maxWidth: '720px',
+        width: '720px',
+        background: 'rgba(15, 23, 42, 0.96)',
+        borderColor: 'rgba(148,163,184,0.45)',
+        color: currentColors.text,
+        boxSizing: 'border-box'
+      }}
+    >
       {/* Technique Name */}
-      <div style={{ 
-        fontSize: '20px', 
-        fontWeight: '700', 
-        marginBottom: '6px', 
-        color: currentColors.accent,
-        wordWrap: 'break-word',
-        overflowWrap: 'break-word'
-      }}>
+      <div
+        style={{ 
+          fontSize: '22px', 
+          fontWeight: '700', 
+          marginBottom: '4px', 
+          color: currentColors.accent,
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          textAlign: 'center'
+        }}
+      >
         {techniqueName}
       </div>
       
       {/* Technique Description */}
-      <div style={{ 
-        fontSize: '16px', 
-        opacity: 0.9, 
-        marginBottom: '8px', 
-        fontWeight: '500',
-        color: currentColors.text,
-        wordWrap: 'break-word',
-        overflowWrap: 'break-word'
-      }}>
+      <div
+        style={{ 
+          fontSize: '15px', 
+          opacity: 0.9, 
+          marginBottom: '10px', 
+          fontWeight: '500',
+          color: currentColors.text,
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          textAlign: 'center'
+        }}
+      >
         {techniqueDescription}
       </div>
       
       {/* Technique Pattern and Benefits */}
-      <div style={{ 
-        fontSize: '14px', 
-        color: currentColors.accent, 
-        fontWeight: '600',
-        wordWrap: 'break-word',
-        overflowWrap: 'break-word'
-      }}>
-        Pattern: {techniquePattern} • Benefits: {techniqueBenefits}
+      <div
+        style={{ 
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: '8px',
+          fontSize: '13px', 
+          color: currentColors.accent, 
+          fontWeight: '600',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word'
+        }}
+      >
+        <span>{techniquePattern}</span>
+        <span>•</span>
+        <span>{techniqueBenefits}</span>
       </div>
     </div>
   );

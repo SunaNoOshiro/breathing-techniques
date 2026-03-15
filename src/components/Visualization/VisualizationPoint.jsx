@@ -23,7 +23,6 @@ const VisualizationPoint = ({
   const pointSize = React.useMemo(() => {
     const isSquare = currentTechnique.phases.length === 4;
     const isTriangle = currentTechnique.phases.length === 3;
-    const isTwoPhase = currentTechnique.phases.length === 2;
     
     // Special handling for specific techniques
     const isCoherent55 = currentTechnique.id === 'coherent'; // 5-5
@@ -45,18 +44,28 @@ const VisualizationPoint = ({
     }
     
     // Scale based on screen size
-    const screenWidth = window.innerWidth;
+    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 390;
     let sizeScaleFactor = 1;
     if (screenWidth >= 1024) {
       sizeScaleFactor = 1.2; // Desktop: larger points
     } else if (screenWidth >= 768) {
       sizeScaleFactor = 1.1; // Tablet: slightly larger
     } else {
-      sizeScaleFactor = 0.7; // Mobile: smaller points to fit better
+      const compactStage = Math.min(
+        containerDimensions?.width || screenWidth,
+        containerDimensions?.height || screenWidth
+      );
+      if (compactStage < 250) {
+        sizeScaleFactor = 0.56;
+      } else if (compactStage < 290) {
+        sizeScaleFactor = 0.62;
+      } else {
+        sizeScaleFactor = 0.68;
+      }
     }
     
     return Math.round(baseDotSize * sizeScaleFactor);
-  }, [currentTechnique]);
+  }, [containerDimensions?.height, containerDimensions?.width, currentTechnique]);
 
   // Calculate scaled position
   const scaledPosition = React.useMemo(() => {
@@ -65,8 +74,8 @@ const VisualizationPoint = ({
     const containerWidth = containerDimensions.width || 400;
     
     // Add padding to account for point sizes (avoid clipping at edges)
-    const isMobile = window.innerWidth < 768;
-    const padding = isMobile ? 40 : 20; // Extra padding on mobile for point circles
+    const isMobile = (typeof window !== 'undefined' ? window.innerWidth : 390) < 768;
+    const padding = isMobile ? 24 : 20;
     const effectiveWidth = containerWidth - padding;
     const effectiveHeight = containerHeight - padding;
     
@@ -82,6 +91,10 @@ const VisualizationPoint = ({
       upOffset = -35; // Move up more for 5-5-5 and 4-4-4
     } else if (shouldMoveUp) {
       upOffset = -20; // Standard upward movement
+    }
+
+    if (isMobile && currentTechnique.phases.length === 4) {
+      upOffset -= 12;
     }
     
     // Center the points properly within the container

@@ -5,6 +5,17 @@ theme: Theme
 sound: Sound
 vibration: Vibration
 technique: Technique
+close: Close
+previousMode: Previous mode
+nextMode: Next mode
+openTechniqueGuide: Open technique guide
+techniqueGuide: Technique Guide
+usefulFor: Useful for
+howToPractice: How to practice
+enableSound: Enable sound
+disableSound: Disable sound
+enableVibration: Enable vibration
+disableVibration: Disable vibration
 on: On
 off: Off
 start: Start
@@ -30,23 +41,14 @@ light: Light
 # Language names
 languageName: English
 
-# Visualization modes
-visualizationMode: Visualization Mode
-prevVisualization: Previous visualization
-nextVisualization: Next visualization
-visualization:
-  classic: 🫁 Organic Flow
-  random: 🎲 Shape Shifter
-  decreasing: 🔻 Geometric Cascade
-  rotating: 🌀 Spiral Dance
-  circle: ⭕ Circle Harmony
-  triangle: 🔺 Triangle Flow
-  square: ◻️ Square Rhythm
-  hexagon: ⬡ Hexagon Pulse
-
 # Common UI labels
 noTechniqueSelected: No technique selected
 breathingApp: Breathing App
+geometricCascade: Geometric Cascade
+modeClassic: Classic Flow
+modeRandom: Organic Pulse
+modeAngles: Angle Cascade
+modeRotating: Rotating Layers
 sessionStatus: Session Status
 currentPhase: Current Phase
 timeRemaining: Time Remaining
@@ -54,12 +56,15 @@ sessionPaused: Session paused
 sessionResumed: Session resumed
 sessionStarted: Session started
 sessionStopped: Session stopped
+sessionControls: Session controls
 pauseSession: Pause session
 resumeSession: Resume session
 startSession: Start session
 stopSession: Stop session
 ready: Ready
 pressToStart: Press to start
+errorLoadingTechnique: Error loading technique
+errorStartingSession: Error starting session
 loadingSettings: Loading settings...
 loadingControls: Loading controls...
 loadingTechnique: Loading technique...

@@ -269,5 +269,3 @@ const NestedLayeredShape = ({
 };
 
 export default NestedLayeredShape;
-
-

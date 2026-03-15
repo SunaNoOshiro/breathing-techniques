@@ -364,18 +364,36 @@ export const LocalizationProvider = ({ children }) => {
     return result;
   }, []);
 
+  const resolveFallback = useCallback((fallback, lang) => {
+    if (fallback === undefined || fallback === null) {
+      return undefined;
+    }
+
+    if (typeof fallback === 'object' && !Array.isArray(fallback)) {
+      return fallback[lang] || fallback.en || Object.values(fallback)[0];
+    }
+
+    return fallback;
+  }, []);
+
   // Translation function
-  const t = useCallback((key, language = null) => {
-    const lang = language || currentLanguage;
+  const t = useCallback((key, languageOrOptions = null) => {
+    const options = typeof languageOrOptions === 'object' && languageOrOptions !== null
+      ? languageOrOptions
+      : {};
+    const lang = typeof languageOrOptions === 'string'
+      ? languageOrOptions
+      : (options.language || currentLanguage);
+    const fallback = resolveFallback(options.fallback, lang);
     const translationData = translations.get(lang);
     
     if (!translationData) {
-      return key;
+      return fallback !== undefined ? fallback : key;
     }
 
     const result = getNestedValue(translationData, key);
-    return result !== undefined ? result : key;
-  }, [currentLanguage, translations, getNestedValue]);
+    return result !== undefined ? result : (fallback !== undefined ? fallback : key);
+  }, [currentLanguage, translations, getNestedValue, resolveFallback]);
 
   // Preload translations
   const preloadTranslations = useCallback(async (languageCodes = ['en', 'uk']) => {
