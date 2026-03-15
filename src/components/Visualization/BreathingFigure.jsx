@@ -9,6 +9,9 @@ import { ANIMATION_CONFIG } from '../../utils/animationUtils.js';
 import { useLocalization } from '../../contexts/LocalizationContext.jsx';
 import Logger from '../../utils/Logger.js';
 
+const MotionSvg = motion.svg;
+const MotionPath = motion.path;
+
 /**
  * Breathing Figure Component
  * Renders the animated human figure with lungs and diaphragm
@@ -19,8 +22,7 @@ const BreathingFigure = ({
   lungData, 
   diaphragmOffset, 
   currentColors, 
-  containerDimensions,
-  prefersReducedMotion = false
+  containerDimensions
 }) => {
   const { t } = useLocalization();
   // Add safety checks and provide fallback
@@ -75,17 +77,22 @@ const BreathingFigure = ({
   const figureDimensions = React.useMemo(() => {
     if (!currentTechnique.phases) {
       Logger.warn('component', 'BreathingFigure: currentTechnique.phases is undefined', currentTechnique);
-      return { width: "180", height: "225" };
+      return { width: 160, height: 210 };
     }
-    
-    if (currentTechnique.id === 'coherent') {
-      return { width: "280", height: "350" };
-    } else if (currentTechnique.phases.length === 4) {
-      return { width: "320", height: "400" };
-    } else {
-      return { width: "180", height: "225" };
-    }
-  }, [currentTechnique]);
+
+    const stageWidth = containerDimensions?.width || 280;
+    const isCoherent = currentTechnique.id === 'coherent';
+    const isFourPhase = currentTechnique.phases.length === 4;
+    const widthRatio = isCoherent ? 0.66 : isFourPhase ? 0.58 : 0.5;
+    const minWidth = isCoherent ? 160 : isFourPhase ? 145 : 130;
+    const maxWidth = isCoherent ? 220 : isFourPhase ? 200 : 172;
+    const width = Math.max(minWidth, Math.min(stageWidth * widthRatio, maxWidth));
+
+    return {
+      width,
+      height: width * (340 / 260)
+    };
+  }, [containerDimensions?.width, currentTechnique]);
 
   // Calculate figure position
   const figurePosition = React.useMemo(() => {
@@ -96,16 +103,18 @@ const BreathingFigure = ({
     const moveUpTechniques = ['478', '478-extended', '555', 'triangle', '628'];
     const shouldMoveUp = moveUpTechniques.includes(currentTechnique.id);
     
+    const compactStage = (containerDimensions?.height || 0) < 280;
     if (shouldMoveUp) {
-      return '52%';
-    } else if (currentTechnique.id === 'coherent') {
-      return '50%';
-    } else if (currentTechnique.phases.length === 4) {
-      return '50%';
-    } else {
-      return '62%';
+      return compactStage ? '49%' : '52%';
     }
-  }, [currentTechnique]);
+    if (currentTechnique.id === 'coherent') {
+      return compactStage ? '48%' : '50%';
+    }
+    if (currentTechnique.phases.length === 4) {
+      return compactStage ? '47%' : '50%';
+    }
+    return compactStage ? '58%' : '62%';
+  }, [containerDimensions?.height, currentTechnique]);
 
   // Compute localized phase label from key
   const phaseKey = safeCurrentPhase?.phase?.key || safeCurrentPhase?.key;
@@ -121,11 +130,11 @@ const BreathingFigure = ({
         transform: 'translate(-50%, -50%)'
       }}
     >
-      <motion.svg 
+      <MotionSvg
         width={figureDimensions.width}
         height={figureDimensions.height}
         viewBox="0 0 260 340" 
-        aria-label={`Phase: ${localizedPhaseName} (${safeCurrentPhase?.timeLeft || 0}s)`}
+        aria-label={`${t('currentPhase')}: ${localizedPhaseName}. ${t('timeRemaining')}: ${safeCurrentPhase?.timeLeft || 0}`}
       >
         {/* Head */}
         <circle 
@@ -162,7 +171,7 @@ const BreathingFigure = ({
         />
 
         {/* Left Lung */}
-        <motion.path
+        <MotionPath
           d="M125 120 C100 120, 80 150, 86 190 C90 220, 110 235, 125 230 C135 225, 140 205, 140 180 C140 155, 135 130, 125 120 Z"
           fill={safeLungData.paint.fill}
           stroke={safeLungData.paint.stroke}
@@ -173,7 +182,7 @@ const BreathingFigure = ({
         />
         
         {/* Right Lung */}
-        <motion.path
+        <MotionPath
           d="M135 120 C160 120, 180 150, 174 190 C170 220, 150 235, 135 230 C125 225, 120 205, 120 180 C120 155, 125 130, 135 120 Z"
           fill={safeLungData.paint.fill}
           stroke={safeLungData.paint.stroke}
@@ -184,7 +193,7 @@ const BreathingFigure = ({
         />
         
         {/* Diaphragm */}
-        <motion.path
+        <MotionPath
           d="M70 240 Q130 260 190 240"
           fill="none"
           stroke={safeCurrentColors.diaphragm}
@@ -192,7 +201,7 @@ const BreathingFigure = ({
           animate={{ y: safeDiaphragmOffset }}
           transition={lungTransition}
         />
-      </motion.svg>
+      </MotionSvg>
     </div>
   );
 };

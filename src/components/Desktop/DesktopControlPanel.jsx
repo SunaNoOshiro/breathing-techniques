@@ -6,9 +6,8 @@
 import React from 'react';
 import { useThemeColors } from '../../contexts/ThemeContext.jsx';
 import { useLocalization } from '../../contexts/LocalizationContext.jsx';
+import { techniqueRegistry } from '../../techniques/TechniqueRegistry.js';
 import CustomDropdown from '../Common/CustomDropdown.jsx';
-import TechniqueSelector from '../Technique/TechniqueSelector.jsx';
-import PreferenceToggle from '../Common/PreferenceToggle.jsx';
 
 /**
  * Desktop Control Panel Component
@@ -29,6 +28,16 @@ const DesktopControlPanel = ({
   const currentColors = useThemeColors();
   const { t, availableLanguages } = useLocalization();
 
+  // Get technique metadata for dropdown with translations
+  const techniqueMetadata = React.useMemo(() => {
+    return techniqueRegistry.getTechniqueMetadata().map(technique => ({
+      ...technique,
+      name: t(`techniques.${technique.id}.name`, { fallback: technique.name }),
+      description: t(`techniques.${technique.id}.description`, { fallback: technique.description }),
+      benefits: t(`techniques.${technique.id}.benefits`, { fallback: technique.benefits })
+    }));
+  }, [t]);
+
   // Get theme names for dropdown
   const themeNames = React.useMemo(() => {
     return [
@@ -42,35 +51,68 @@ const DesktopControlPanel = ({
   }, [t]);
 
   return (
-    <div 
-      className="desktop-control-panel" 
+    <aside 
+      className="desktop-control-panel glass-card glass-card--padded"
       style={{
         width: '300px',
-        background: currentColors.panel,
-        borderRight: `1px solid ${currentColors.border}`,
-        padding: '24px',
+        background: 'rgba(15, 23, 42, 0.96)',
+        borderColor: 'rgba(148,163,184,0.45)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px'
+        gap: '22px',
+        color: currentColors.text
       }}
+      aria-label={t('settings')}
     >
+      {/* Panel header */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ fontSize: '11px', letterSpacing: '0.18em', textTransform: 'uppercase', opacity: 0.7 }}>
+          {t('breathingApp')}
+        </div>
+        <div style={{ fontSize: '18px', fontWeight: 600 }}>
+          {t('settings')}
+        </div>
+      </div>
+
       {/* Technique Selection */}
-      <TechniqueSelector
-        selectedTechniqueId={selectedTechniqueId}
-        onChange={onTechniqueChange}
-      />
+      <section aria-label={t('technique')}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <label style={{ 
+            fontSize: '13px', 
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span aria-hidden="true">◯</span>
+            {t('technique')}
+          </label>
+        </div>
+        <CustomDropdown 
+          value={selectedTechniqueId}
+          options={techniqueMetadata.map(technique => ({
+            value: technique.id,
+            label: technique.name
+          }))}
+          onChange={onTechniqueChange}
+          colors={currentColors}
+        />
+      </section>
 
       {/* Language Selection */}
-      <div>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '14px', 
-          marginBottom: '8px', 
-          fontWeight: '600',
-          color: currentColors.text
-        }}>
-          {t('language')}
-        </label>
+      <section aria-label={t('language')}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <label style={{ 
+            fontSize: '13px', 
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span aria-hidden="true">🌐</span>
+            {t('language')}
+          </label>
+        </div>
         <CustomDropdown 
           value={currentLanguage}
           options={availableLanguages.map(lang => ({
@@ -80,19 +122,22 @@ const DesktopControlPanel = ({
           onChange={onLanguageChange}
           colors={currentColors}
         />
-      </div>
+      </section>
 
       {/* Theme Selection */}
-      <div>
-        <label style={{ 
-          display: 'block', 
-          fontSize: '14px', 
-          marginBottom: '8px', 
-          fontWeight: '600',
-          color: currentColors.text
-        }}>
-          {t('theme')}
-        </label>
+      <section aria-label={t('theme')}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <label style={{ 
+            fontSize: '13px', 
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span aria-hidden="true">🌊</span>
+            {t('theme')}
+          </label>
+        </div>
         <CustomDropdown 
           value={selectedThemeKey}
           options={themeNames.map(theme => ({
@@ -102,30 +147,134 @@ const DesktopControlPanel = ({
           onChange={onThemeChange}
           colors={currentColors}
         />
-      </div>
+      </section>
 
       {/* Sound Control */}
-      <PreferenceToggle
-        name="sound"
-        label={t('sound')}
-        checked={soundOn}
-        onChange={onSoundChange}
-        onLabel={t('on')}
-        offLabel={t('off')}
-        colors={currentColors}
-      />
+      <section aria-label={t('sound')}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '6px' 
+        }}>
+          <label style={{ 
+            fontSize: '13px', 
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span aria-hidden="true">🔊</span>
+            {t('sound')}
+          </label>
+        </div>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            fontSize: '14px',
+            cursor: 'pointer'
+          }}>
+            <input 
+              type="radio" 
+              name="sound" 
+              checked={soundOn} 
+              onChange={() => onSoundChange(true)}
+              style={{ 
+                transform: 'scale(1.1)',
+                accentColor: currentColors.accent,
+                cursor: 'pointer'
+              }}
+            />
+            {t('on')}
+          </label>
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            fontSize: '14px',
+            cursor: 'pointer'
+          }}>
+            <input 
+              type="radio" 
+              name="sound" 
+              checked={!soundOn} 
+              onChange={() => onSoundChange(false)}
+              style={{ 
+                transform: 'scale(1.1)',
+                accentColor: currentColors.accent,
+                cursor: 'pointer'
+              }}
+            />
+            {t('off')}
+          </label>
+        </div>
+      </section>
 
       {/* Vibration Control */}
-      <PreferenceToggle
-        name="vibration"
-        label={t('vibration')}
-        checked={vibrateOn}
-        onChange={onVibrationChange}
-        onLabel={t('on')}
-        offLabel={t('off')}
-        colors={currentColors}
-      />
-    </div>
+      <section aria-label={t('vibration')}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '6px' 
+        }}>
+          <label style={{ 
+            fontSize: '13px', 
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span aria-hidden="true">🌗</span>
+            {t('vibration')}
+          </label>
+        </div>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            fontSize: '14px',
+            cursor: 'pointer'
+          }}>
+            <input 
+              type="radio" 
+              name="vibration" 
+              checked={vibrateOn} 
+              onChange={() => onVibrationChange(true)}
+              style={{ 
+                transform: 'scale(1.1)',
+                accentColor: currentColors.accent,
+                cursor: 'pointer'
+              }}
+            />
+            {t('on')}
+          </label>
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            fontSize: '14px',
+            cursor: 'pointer'
+          }}>
+            <input 
+              type="radio" 
+              name="vibration" 
+              checked={!vibrateOn} 
+              onChange={() => onVibrationChange(false)}
+              style={{ 
+                transform: 'scale(1.1)',
+                accentColor: currentColors.accent,
+                cursor: 'pointer'
+              }}
+            />
+            {t('off')}
+          </label>
+        </div>
+      </section>
+    </aside>
   );
 };
 

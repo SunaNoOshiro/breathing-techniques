@@ -164,5 +164,3 @@ const LayeredShape = ({
 };
 
 export default LayeredShape;
-
-

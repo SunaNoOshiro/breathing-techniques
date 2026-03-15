@@ -1,65 +1,99 @@
-/**
- * Refactored App Component
- * Uses SOLID principles and design patterns with extracted components
- */
-
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { useLocalization } from './contexts/LocalizationContext.jsx';
-import { useBreathingSession, useAccessibility, usePreferences } from './hooks/index.js';
-import { useThemeColors, useTheme } from './contexts/ThemeContext.jsx';
-import { useServices } from './contexts/ServicesContext.jsx';
-import { useResponsive } from './hooks/index.js';
-import { techniqueRegistry } from './techniques/TechniqueRegistry.js';
-import { LazyComponents } from './components/lazyComponents.js';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatedLoading } from './animations/BreathingAnimations.jsx';
+import { ErrorBoundary, VisualizationErrorBoundary } from './components/ErrorBoundary.jsx';
+import SettingsScreen from './components/Settings/SettingsScreen.jsx';
+import TechniqueGuideSheet from './components/Technique/TechniqueGuideSheet.jsx';
+import VisualizationContainer from './components/Visualization/VisualizationContainer.jsx';
+import { useLocalization } from './contexts/LocalizationContext.jsx';
+import { useServices } from './contexts/ServicesContext.jsx';
+import { useTheme, useThemeColors } from './contexts/ThemeContext.jsx';
+import CustomDropdown from './components/Common/CustomDropdown.jsx';
 import {
-  ErrorBoundary,
-  TechniqueErrorBoundary,
-  VisualizationErrorBoundary
-} from './components/ErrorBoundary.jsx';
+  useAccessibility,
+  useBreathingSession,
+  usePreferences,
+  useTechnique
+} from './hooks/index.js';
+import { techniqueRegistry } from './techniques/TechniqueRegistry.js';
 import Logger from './utils/Logger.js';
-import DesktopStatus from './components/Desktop/DesktopStatus.jsx';
 
-// Lazy load heavy components
-const VisualizationContainer = LazyComponents.VisualizationContainer;
-const TechniqueInfo = LazyComponents.TechniqueInfo;
-const DesktopControlPanel = LazyComponents.DesktopControlPanel;
-const SettingsScreen = LazyComponents.SettingsScreen;
+const SettingsIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+    <path d="M4 7h8" strokeLinecap="round" />
+    <path d="M4 17h14" strokeLinecap="round" />
+    <path d="M16 7h4" strokeLinecap="round" />
+    <path d="M4 12h16" strokeLinecap="round" />
+    <circle cx="14" cy="7" r="2.2" />
+    <circle cx="9" cy="12" r="2.2" />
+    <circle cx="18" cy="17" r="2.2" />
+  </svg>
+);
 
-// Import lightweight components directly
-import { MobileHeader, MobileBottomNav } from './components/index.js';
+const InfoIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 10v6" strokeLinecap="round" />
+    <circle cx="12" cy="7.25" r="0.8" fill="currentColor" stroke="none" />
+  </svg>
+);
 
-/**
- * Main App Component
- * Refactored to use SOLID principles and design patterns
- */
+const SoundIcon = ({ muted = false }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <path d="M5 10h3.2L12 6.75v10.5L8.2 14H5z" strokeLinejoin="round" />
+    {!muted ? (
+      <>
+        <path d="M15 9.25a4 4 0 0 1 0 5.5" strokeLinecap="round" />
+        <path d="M17.8 6.75a7.2 7.2 0 0 1 0 10.5" strokeLinecap="round" />
+      </>
+    ) : (
+      <path className="session-toggle__slash" d="M6 6l12 12" strokeLinecap="round" />
+    )}
+  </svg>
+);
+
+const VibrationIcon = ({ disabled = false }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <rect x="8" y="4.5" width="8" height="15" rx="2.5" />
+    {!disabled ? (
+      <>
+        <path d="M5.5 9l-1.5 2 1.5 2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M18.5 9l1.5 2-1.5 2" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ) : (
+      <path className="session-toggle__slash" d="M6 6l12 12" strokeLinecap="round" />
+    )}
+  </svg>
+);
+
+const UI_LABEL_FALLBACKS = {
+  techniqueGuide: { en: 'Technique Guide', uk: 'Гід по техніці' },
+  usefulFor: { en: 'Useful for', uk: 'Коли корисно' },
+  howToPractice: { en: 'How to practice', uk: 'Як виконувати' },
+  errorLoadingTechnique: { en: 'Error loading technique', uk: 'Помилка завантаження техніки' },
+  noTechniqueSelected: { en: 'No technique selected', uk: 'Техніка не обрана' },
+  errorStartingSession: { en: 'Error starting session', uk: 'Помилка запуску сесії' },
+  sessionStopped: { en: 'Session stopped', uk: 'Сесію зупинено' }
+};
+
 export default function BreathingApp() {
-  // Localization
   const { t, currentLanguage, changeLanguage } = useLocalization();
-  
-  // Services
   const services = useServices();
-  const { preferencesState, audioService } = services;
-  
-  // State
-  const [showSettings, setShowSettings] = useState(false);
-
-  // Hooks
+  const { audioService } = services;
+  const { setTheme } = useTheme();
+  const currentColors = useThemeColors();
+  const { announce } = useAccessibility();
+  const { currentTechnique } = useTechnique();
   const {
     start,
     stop,
     changeTechnique,
     isRunning,
-    isPaused,
-    currentPhase
+    isPaused
   } = useBreathingSession();
 
-  const currentColors = useThemeColors();
-  const { setTheme } = useTheme();
-  const { isDesktop } = useResponsive();
-  const { announce } = useAccessibility();
-  
-  // Reactive preferences
+  const [showSettings, setShowSettings] = useState(false);
+  const [showTechniqueGuide, setShowTechniqueGuide] = useState(false);
+
   const preferences = usePreferences();
   const {
     soundEnabled: soundOn = true,
@@ -72,335 +106,323 @@ export default function BreathingApp() {
     setSelectedTechniqueId
   } = preferences || {};
 
-  // Debug logging
-  Logger.debug('component', 'Current preferences state:', preferencesState);
-  Logger.debug('component', 'Selected theme key:', selectedThemeKey);
-  Logger.debug('component', 'Sound on:', soundOn);
-  Logger.debug('component', 'Vibrate on:', vibrateOn);
-
-  // Get current technique instance
-  let technique;
-  try {
-    technique = techniqueRegistry.getTechnique(selectedTechniqueId);
-  } catch (error) {
-    Logger.warn('component', 'Failed to get technique:', error);
-    technique = null;
-  }
-  
-  // Debug technique loading
-  Logger.debug('component', 'Selected technique ID:', selectedTechniqueId);
-  Logger.debug('component', 'Available techniques:', techniqueRegistry.getTechniqueIds());
-  Logger.debug('component', 'Technique from registry:', technique);
-  
-  if (!technique) {
-    Logger.warn('component', 'Technique not found for ID:', selectedTechniqueId);
-  }
-
-  // Initialize theme on mount
-  useEffect(() => {
-    const initializeTheme = async () => {
-      try {
-        Logger.debug('component', 'Initializing theme with:', selectedThemeKey);
-        // Apply the current theme from preferences
-        await setTheme(selectedThemeKey);
-        Logger.debug('component', 'Theme initialization completed');
-      } catch (error) {
-        Logger.warn('component', 'Failed to initialize theme:', error);
-      }
-    };
-    
-    // Only initialize if we have a valid theme key
-    if (selectedThemeKey) {
-      initializeTheme();
+  const resolvedTechnique = useMemo(() => {
+    try {
+      return techniqueRegistry.getTechnique(selectedTechniqueId);
+    } catch (error) {
+      Logger.warn('component', 'Failed to resolve selected technique', error);
+      return currentTechnique;
     }
-  }, [setTheme, selectedThemeKey]);
+  }, [selectedTechniqueId, currentTechnique]);
 
-  // Initialize vibration service with preference state
+  const isSessionActive = isRunning || isPaused;
+  const techniqueName = resolvedTechnique
+    ? t(`techniques.${resolvedTechnique.getId()}.name`, { fallback: resolvedTechnique.getName() })
+    : t('breathingApp');
+  const themeOptions = useMemo(() => ([
+    { value: 'dark', label: t('dark') },
+    { value: 'light', label: t('light') },
+    { value: 'ocean', label: t('ocean') },
+    { value: 'forest', label: t('forest') },
+    { value: 'sunset', label: t('sunset') },
+    { value: 'purple', label: t('purple') }
+  ]), [t]);
+  const techniqueOptions = useMemo(() => (
+    techniqueRegistry.getTechniqueMetadata().map((technique) => ({
+      value: technique.id,
+      label: t(`techniques.${technique.id}.name`, { fallback: technique.name })
+    }))
+  ), [t]);
+  const techniqueGuide = useMemo(() => {
+    if (!resolvedTechnique) {
+      return null;
+    }
+
+    const techniqueId = resolvedTechnique.getId();
+    const instructions = t(`techniques.${techniqueId}.instructions`);
+
+    return {
+      title: techniqueName,
+      pattern: resolvedTechnique.getPattern?.() || '',
+      description: t(`techniques.${techniqueId}.description`, {
+        fallback: resolvedTechnique.getDescription?.() || ''
+      }),
+      benefits: t(`techniques.${techniqueId}.benefits`, {
+        fallback: resolvedTechnique.getBenefits?.() || ''
+      }),
+      instructions: Array.isArray(instructions) ? instructions : []
+    };
+  }, [resolvedTechnique, t, techniqueName]);
+  const dropdownColors = useMemo(() => ({
+    panel: currentColors.panel,
+    text: currentColors.text,
+    border: currentColors.border,
+    accent: currentColors.accent
+  }), [currentColors.accent, currentColors.border, currentColors.panel, currentColors.text]);
+
+  useEffect(() => {
+    if (!selectedThemeKey) {
+      return;
+    }
+
+    setTheme(selectedThemeKey).catch((error) => {
+      Logger.warn('component', 'Failed to initialize theme', error);
+    });
+  }, [selectedThemeKey, setTheme]);
+
   useEffect(() => {
     if (services?.vibrationService && vibrateOn !== undefined) {
       services.vibrationService.setEnabled(vibrateOn);
-      Logger.debug('component', 'VibrationService initialized with enabled:', vibrateOn);
     }
   }, [services, vibrateOn]);
 
-  // Initialize technique in session state on mount - TEMPORARILY DISABLED
-  // useEffect(() => {
-  //   const initializeTechnique = async () => {
-  //     try {
-  //       // Wait a bit for all contexts to be ready
-  //       await new Promise(resolve => setTimeout(resolve, 200));
-        
-  //       console.log('Attempting to initialize technique...');
-  //       console.log('Technique available:', !!technique);
-  //       console.log('Is running:', isRunning);
-  //       console.log('Is paused:', isPaused);
-  //       console.log('Current phase:', currentPhase);
-        
-  //       if (!technique) {
-  //         console.warn('Cannot initialize technique: technique is undefined');
-  //         return;
-  //       }
-        
-  //       if (isRunning || isPaused || currentPhase) {
-  //         console.log('Skipping technique initialization: session already active');
-  //         return;
-  //       }
-        
-  //       console.log('Initializing technique:', selectedTechniqueId);
-  //       await changeTechnique(selectedTechniqueId, technique);
-  //       console.log('Technique initialized successfully');
-  //     } catch (error) {
-  //       console.warn('Failed to initialize technique:', error);
-  //     }
-  //   };
-    
-  //   initializeTechnique();
-  // }, [selectedTechniqueId, technique, changeTechnique, isRunning, isPaused, currentPhase]);
-
-  // Theme change handler
-  const handleThemeChange = useCallback(async (newThemeKey) => {
+  const handleThemeChange = useCallback(async (themeKey) => {
     try {
-      Logger.debug('component', 'Theme change requested:', newThemeKey);
-      
-      // Update preferences state
-      if (setCurrentTheme && typeof setCurrentTheme === 'function') {
-        setCurrentTheme(newThemeKey);
-      }
-      
-      // Apply theme using theme context
-      Logger.debug('component', 'Applying theme via context...');
-      await setTheme(newThemeKey);
-      Logger.debug('component', 'Theme applied successfully');
+      setCurrentTheme?.(themeKey);
+      await setTheme(themeKey);
     } catch (error) {
-      Logger.error('component', 'Failed to change theme:', error);
+      Logger.error('component', 'Failed to change theme', error);
     }
-  }, [setTheme, setCurrentTheme]);
+  }, [setCurrentTheme, setTheme]);
 
-  // Technique change handler
-  const handleTechniqueChange = useCallback(async (newTechniqueId) => {
+  const handleTechniqueChange = useCallback(async (techniqueId) => {
     try {
-      // Save technique to preferences
-      if (setSelectedTechniqueId && typeof setSelectedTechniqueId === 'function') {
-        setSelectedTechniqueId(newTechniqueId);
-      }
-      
-      // Reset session when technique changes
-      stop();
-      
-      // Update technique in session state
-      const newTechnique = techniqueRegistry.getTechnique(newTechniqueId);
-      if (newTechnique) {
-        // Use the changeTechnique method from breathing context
-        await changeTechnique(newTechniqueId, newTechnique);
-      }
-    } catch (error) {
-      Logger.error('component', 'Failed to change technique:', error);
-    }
-  }, [stop, changeTechnique, setSelectedTechniqueId]);
+      const nextTechnique = techniqueRegistry.getTechnique(techniqueId);
 
-  // Play/Stop handler
+      setShowTechniqueGuide(false);
+      setSelectedTechniqueId?.(techniqueId);
+      stop?.();
+      await changeTechnique?.(techniqueId, nextTechnique);
+    } catch (error) {
+      Logger.error('component', 'Failed to change technique', error);
+    }
+  }, [changeTechnique, setSelectedTechniqueId, stop]);
+
   const handlePlayPause = useCallback(async () => {
     try {
-      if (isRunning || isPaused) {
-        // Stop the session completely and reset
-        stop();
+      if (isSessionActive) {
+        stop?.();
         announce(t('sessionStopped'), 'polite');
-      } else {
-        // Ensure technique is loaded before starting
-        let currentTechnique = technique;
-        
-        if (!currentTechnique) {
-          Logger.warn('component', 'handlePlayPause: technique is null, loading from registry...');
-          const techniqueToLoad = techniqueRegistry.getTechnique(selectedTechniqueId);
-          if (!techniqueToLoad) {
-            Logger.error('component', 'handlePlayPause: Failed to load technique:', selectedTechniqueId);
-            announce(t('errorLoadingTechnique') || 'Error loading technique', 'assertive');
-            return;
-          }
-          currentTechnique = techniqueToLoad;
-        }
-        
-        // Warm up audio context on user gesture to avoid first-cycle mute
-        if (soundOn && audioService) {
-          try {
-            await audioService.initialize();
-            audioService.ensureAudioContext?.();
-          } catch (error) {
-            Logger.warn('component', 'Failed to warm up audio context', error);
-          }
-        }
-
-        Logger.debug('component', 'handlePlayPause: Starting session with technique:', currentTechnique.getId());
-        await start(selectedTechniqueId, currentTechnique);
-        announce(t('sessionStarted'), 'polite');
+        return;
       }
+
+      const techniqueToStart = resolvedTechnique || techniqueRegistry.getTechnique(selectedTechniqueId);
+
+      if (!techniqueToStart) {
+        announce(
+          t('errorLoadingTechnique', { fallback: UI_LABEL_FALLBACKS.errorLoadingTechnique })
+          || t('noTechniqueSelected', { fallback: UI_LABEL_FALLBACKS.noTechniqueSelected }),
+          'assertive'
+        );
+        return;
+      }
+
+      if (soundOn && audioService) {
+        try {
+          await audioService.initialize();
+          audioService.ensureAudioContext?.();
+        } catch (error) {
+          Logger.warn('component', 'Audio warmup failed', error);
+        }
+      }
+
+      await start?.(selectedTechniqueId, techniqueToStart);
+      announce(t('sessionStarted'), 'polite');
     } catch (error) {
-      Logger.error('component', 'handlePlayPause error:', error);
-      announce(t('errorStartingSession') || 'Error starting session', 'assertive');
+      Logger.error('component', 'Failed to start session', error);
+      announce(
+        t('errorStartingSession', { fallback: UI_LABEL_FALLBACKS.errorStartingSession })
+        || t('sessionStopped', { fallback: UI_LABEL_FALLBACKS.sessionStopped }),
+        'assertive'
+      );
     }
-  }, [isRunning, isPaused, start, stop, selectedTechniqueId, technique, announce, t, soundOn, audioService]);
-
-  // Settings handlers
-  const handleSettingsClick = useCallback(() => {
-    setShowSettings(true);
-  }, []);
-
-  const handleSettingsClose = useCallback(() => {
-    setShowSettings(false);
-  }, []);
+  }, [
+    announce,
+    audioService,
+    isSessionActive,
+    resolvedTechnique,
+    selectedTechniqueId,
+    soundOn,
+    start,
+    stop,
+    t
+  ]);
 
   const handleSoundChange = useCallback((enabled) => {
-    Logger.debug('component', 'Sound change requested:', enabled);
-    if (setSoundEnabled && typeof setSoundEnabled === 'function') {
-      setSoundEnabled(enabled);
-      Logger.debug('component', 'Sound preference updated');
-    }
-  }, [setSoundEnabled]);
+    setSoundEnabled?.(enabled);
+    services?.audioService?.setEnabled?.(enabled);
+  }, [services, setSoundEnabled]);
 
   const handleVibrationChange = useCallback((enabled) => {
-    Logger.debug('component', 'Vibration change requested:', enabled);
-    if (setVibrationEnabled && typeof setVibrationEnabled === 'function') {
-      setVibrationEnabled(enabled);
-      Logger.debug('component', 'Vibration preference updated');
-    }
-    // Also update the vibration service directly
-    if (services?.vibrationService) {
-      services.vibrationService.setEnabled(enabled);
-      Logger.debug('component', 'VibrationService.setEnabled called with:', enabled);
-    }
-  }, [setVibrationEnabled, services]);
+    setVibrationEnabled?.(enabled);
+    services?.vibrationService?.setEnabled(enabled);
+  }, [services, setVibrationEnabled]);
 
-  // Keyboard navigation handler
-  const handleKeyDown = useCallback((e) => {
-    switch (e.key) {
-      case ' ':
-        e.preventDefault();
-        handlePlayPause();
-        break;
-      case 'Escape':
-        if (showSettings) {
-          setShowSettings(false);
-        }
-        break;
-      case 's':
-      case 'S':
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          setShowSettings(true);
-        }
-        break;
+  const toggleSound = useCallback(() => {
+    handleSoundChange(!soundOn);
+  }, [handleSoundChange, soundOn]);
+
+  const toggleVibration = useCallback(() => {
+    handleVibrationChange(!vibrateOn);
+  }, [handleVibrationChange, vibrateOn]);
+
+  const handleKeyDown = useCallback((event) => {
+    if (event.key === ' ') {
+      event.preventDefault();
+      handlePlayPause();
+    }
+
+    if (event.key === 'Escape' && showSettings) {
+      setShowSettings(false);
     }
   }, [handlePlayPause, showSettings]);
 
-  // Set up keyboard navigation
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [handleKeyDown]);
+
+  if (!preferences) {
+    return <AnimatedLoading label={t('loadingVisualization')} />;
+  }
 
   return (
     <ErrorBoundary>
-      <div 
-        className="breathing-app" 
-        style={{ 
-          background: currentColors.bg, 
-          color: currentColors.text,
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: isDesktop ? 'row' : 'column'
-        }}
-        role="main"
-        aria-label={t('breathingApp')}
-        tabIndex={-1}
-      >
-      {/* Settings Screen */}
-      {showSettings && (
-        <Suspense fallback={<AnimatedLoading label={t('loadingSettings')} />}>
+      <main className="breathing-app" aria-label={t('breathingApp')}>
+        <div className="breathing-app__ambient" aria-hidden="true">
+          <div className="breathing-app__orb breathing-app__orb--teal" />
+          <div className="breathing-app__orb breathing-app__orb--violet" />
+          <div className="breathing-app__orb breathing-app__orb--emerald" />
+        </div>
+
+        <section className="breathing-shell glass-panel">
+          <div className="breathing-shell__top">
+            <div className="breathing-shell__mode">{t('breathingApp')}</div>
+
+            <button
+              type="button"
+              className="breathing-shell__settings"
+              onClick={() => setShowSettings(true)}
+              aria-label={t('settings')}
+            >
+              <SettingsIcon />
+            </button>
+
+            <label className="breathing-shell__picker-label">{t('technique')}</label>
+
+            <div className="breathing-shell__picker-control">
+              <CustomDropdown
+                value={selectedTechniqueId}
+                options={techniqueOptions}
+                onChange={handleTechniqueChange}
+                colors={dropdownColors}
+                showAllOptions
+              />
+            </div>
+
+            <button
+              type="button"
+              className="breathing-shell__info"
+              onClick={() => setShowTechniqueGuide(true)}
+              aria-label={t('openTechniqueGuide')}
+            >
+              <InfoIcon />
+            </button>
+          </div>
+
+          <div className="theme-strip" role="group" aria-label={t('theme')}>
+            {themeOptions.map((theme) => (
+              <button
+                key={theme.value}
+                type="button"
+                className={`theme-strip__button${
+                  selectedThemeKey === theme.value ? ' is-active' : ''
+                }`}
+                onClick={() => handleThemeChange(theme.value)}
+                aria-pressed={selectedThemeKey === theme.value}
+              >
+                {theme.label}
+              </button>
+            ))}
+          </div>
+
+          <VisualizationErrorBoundary>
+            <VisualizationContainer />
+          </VisualizationErrorBoundary>
+
+          <footer className="breathing-shell__footer">
+            <button
+              type="button"
+              className={`session-toggle glass-panel${soundOn ? '' : ' is-off'}`}
+              onClick={toggleSound}
+              aria-label={soundOn ? t('disableSound') : t('enableSound')}
+              aria-pressed={soundOn}
+              title={soundOn ? t('disableSound') : t('enableSound')}
+            >
+              <SoundIcon muted={!soundOn} />
+            </button>
+
+            <button
+              type="button"
+              className="session-button glass-panel"
+              onClick={handlePlayPause}
+              aria-label={isSessionActive ? t('stopSession') : t('startSession')}
+              aria-pressed={isSessionActive}
+            >
+              {isSessionActive ? t('stop').toUpperCase() : t('start').toUpperCase()}
+            </button>
+
+            <button
+              type="button"
+              className={`session-toggle glass-panel${vibrateOn ? '' : ' is-off'}`}
+              onClick={toggleVibration}
+              aria-label={vibrateOn ? t('disableVibration') : t('enableVibration')}
+              aria-pressed={vibrateOn}
+              title={vibrateOn ? t('disableVibration') : t('enableVibration')}
+            >
+              <VibrationIcon disabled={!vibrateOn} />
+            </button>
+          </footer>
+        </section>
+
+        {showSettings ? (
           <SettingsScreen
-            onClose={handleSettingsClose}
-            currentLanguage={currentLanguage}
-            onLanguageChange={changeLanguage}
-            selectedThemeKey={selectedThemeKey}
-            onThemeChange={handleThemeChange}
-            soundOn={soundOn}
-            onSoundChange={handleSoundChange}
-            vibrateOn={vibrateOn}
-            onVibrationChange={handleVibrationChange}
-          />
-        </Suspense>
-      )}
-      
-      {/* Desktop Layout: Left Control Panel */}
-      {isDesktop && (
-        <Suspense fallback={<AnimatedLoading label={t('loadingControls')} />}>
-          <DesktopControlPanel
+            onClose={() => setShowSettings(false)}
             selectedTechniqueId={selectedTechniqueId}
             onTechniqueChange={handleTechniqueChange}
-            currentLanguage={currentLanguage}
-            onLanguageChange={changeLanguage}
+            techniqueOptions={techniqueOptions}
             selectedThemeKey={selectedThemeKey}
             onThemeChange={handleThemeChange}
+            themeOptions={themeOptions}
+            currentLanguage={currentLanguage}
+            onLanguageChange={changeLanguage}
             soundOn={soundOn}
             onSoundChange={handleSoundChange}
             vibrateOn={vibrateOn}
             onVibrationChange={handleVibrationChange}
           />
-        </Suspense>
-      )}
+        ) : null}
 
-      {/* Mobile Layout: Header with Technique Selection */}
-      {!isDesktop && (
-        <MobileHeader
-          selectedTechniqueId={selectedTechniqueId}
-          onTechniqueChange={handleTechniqueChange}
-        />
-      )}
-
-      {/* Main Content Area */}
-      <div 
-        className="main-content" 
-        style={{ 
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: isDesktop ? '24px' : '8px'
-        }}
-      >
-        {/* Technique Info */}
-        <TechniqueErrorBoundary>
-          <Suspense fallback={<AnimatedLoading label={t('loadingTechnique')} />}>
-            <TechniqueInfo />
-          </Suspense>
-        </TechniqueErrorBoundary>
-
-        {/* Visualization Container */}
-        <VisualizationErrorBoundary>
-          <Suspense fallback={<AnimatedLoading label={t('loadingVisualization')} />}>
-            <VisualizationContainer />
-          </Suspense>
-        </VisualizationErrorBoundary>
-
-        {/* Desktop Status Display */}
-        {isDesktop && (
-          <DesktopStatus
-            currentPhase={currentPhase}
-            isRunning={isRunning}
-            isPaused={isPaused}
-            onPlayPause={handlePlayPause}
+        {showTechniqueGuide && techniqueGuide ? (
+          <TechniqueGuideSheet
+            title={techniqueGuide.title}
+            pattern={techniqueGuide.pattern}
+            description={techniqueGuide.description}
+            benefits={techniqueGuide.benefits}
+            instructions={techniqueGuide.instructions}
+            labels={{
+              guide: t('techniqueGuide', { fallback: UI_LABEL_FALLBACKS.techniqueGuide }),
+              usefulFor: t('usefulFor', { fallback: UI_LABEL_FALLBACKS.usefulFor }),
+              howTo: t('howToPractice', { fallback: UI_LABEL_FALLBACKS.howToPractice }),
+              close: t('close')
+            }}
+            onClose={() => setShowTechniqueGuide(false)}
           />
-        )}
-      </div>
-
-      {/* Mobile Bottom Navigation Bar */}
-      {!isDesktop && (
-        <MobileBottomNav
-          onSettingsClick={handleSettingsClick}
-          onPlayPause={handlePlayPause}
-        />
-      )}
-      </div>
+        ) : null}
+      </main>
     </ErrorBoundary>
   );
 }

@@ -210,4 +210,3 @@ export class RotatingShapeVisualization extends VisualizationMode {
     return <RotatingShapeWrapper {...props} />;
   }
 }
-
