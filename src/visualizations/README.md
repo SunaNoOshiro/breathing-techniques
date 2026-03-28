@@ -2,7 +2,7 @@
 
 A flexible, SOLID-compliant visualization system for breathing techniques.
 
-## Active Modes (4)
+## Active Modes (5)
 
 ### 1. 🫁 Organic Flow (Classic)
 - Traditional lungs and diaphragm animation with breathing points
@@ -33,6 +33,13 @@ A flexible, SOLID-compliant visualization system for breathing techniques.
 - **Smooth transitions**: Each layer fades in already rotated
 - After first cycle: random shapes (avoiding last 2)
 - File: `modes/RotatingShapeVisualization.jsx`
+
+### 5. 🌌 Spiral Dance (Galaxy)
+- Canvas-rendered galaxy particle system with 4 logarithmic spiral arms
+- 700+ particles with radial and tangential noise for organic stardust drift
+- Breathing state controls scale, glow intensity and angular velocity
+- HOLD adds a subtle twinkling opacity wave across the star field
+- File: `modes/SpiralDanceVisualization.jsx`
 
 ## Architecture
 
@@ -66,4 +73,3 @@ export class MyMode extends VisualizationMode {
 
 - **Primitives**: See `primitives/README.md`
 - **Shapes**: See `primitives/shapes/README.md`
-

@@ -3,12 +3,11 @@
  * Provides reusable hooks for common functionality following Composition pattern
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useServices } from '../contexts/ServicesContext.jsx';
 import { useBreathing } from '../contexts/BreathingContext.jsx';
 import { useTheme } from '../contexts/ThemeContext.jsx';
-import { useLocalization } from '../contexts/LocalizationContext.jsx';
-import { BREAKPOINT_UTILS } from '../design/breakpoints.js';
+import { BREAKPOINTS, BREAKPOINT_UTILS } from '../design/breakpoints.js';
 import { AppError, ERROR_CODES } from '../errors/AppError.js';
 import Logger from '../utils/Logger.js';
 
@@ -303,16 +302,37 @@ export const useResponsive = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  const isMobile = useMemo(() => BREAKPOINT_UTILS.isMobile(), [windowSize.width]);
-  const isTablet = useMemo(() => BREAKPOINT_UTILS.isTablet(), [windowSize.width]);
-  const isDesktop = useMemo(() => BREAKPOINT_UTILS.isDesktop(), [windowSize.width]);
+  const isMobile = useMemo(() => windowSize.width < BREAKPOINTS.md, [windowSize.width]);
+  const isTablet = useMemo(() => (
+    windowSize.width >= BREAKPOINTS.md && windowSize.width < BREAKPOINTS.lg
+  ), [windowSize.width]);
+  const isDesktop = useMemo(() => windowSize.width >= BREAKPOINTS.lg, [windowSize.width]);
   
   const isBreakpoint = useCallback((breakpoint) => {
-    return BREAKPOINT_UTILS.isBreakpoint(breakpoint);
+    const width = windowSize.width;
+    const bp = BREAKPOINTS[breakpoint];
+
+    if (breakpoint === 'xs') {
+      return width >= BREAKPOINTS.xs && width < BREAKPOINTS.sm;
+    }
+
+    if (breakpoint === '2xl') {
+      return width >= BREAKPOINTS['2xl'];
+    }
+
+    const nextBreakpoint = Object.keys(BREAKPOINTS)[
+      Object.keys(BREAKPOINTS).indexOf(breakpoint) + 1
+    ];
+
+    if (nextBreakpoint) {
+      return width >= bp && width < BREAKPOINTS[nextBreakpoint];
+    }
+
+    return width >= bp;
   }, [windowSize.width]);
   
   const getResponsiveValue = useCallback((values) => {
-    return BREAKPOINT_UTILS.getResponsiveValue(values);
+    return values[currentBreakpoint] || values.default || values.lg || values.md || values.sm || values.xs;
   }, [currentBreakpoint]);
   
   return {

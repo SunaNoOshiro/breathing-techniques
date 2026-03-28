@@ -29,6 +29,88 @@ function withAlpha(rgbString, alpha) {
   return rgbString;
 }
 
+function pointInPolygon(x, y, polygon) {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i][0], yi = polygon[i][1];
+    const xj = polygon[j][0], yj = polygon[j][1];
+    const intersect = ((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / (yj - yi + 0.000001) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function fitInnerSize(outerRenderer, outerSize, innerRenderer, cx, cy) {
+  const outerPoly = outerRenderer.getPolygonPoints(cx, cy, outerSize);
+  let lo = 0, hi = outerSize, best = 0;
+  for (let iter = 0; iter < 18; iter++) {
+    const mid = (lo + hi) / 2;
+    const innerPoly = innerRenderer.getPolygonPoints(cx, cy, mid);
+    let allInside = true;
+    for (let k = 0; k < innerPoly.length; k++) {
+      const [px, py] = innerPoly[k];
+      if (!pointInPolygon(px, py, outerPoly)) { allInside = false; break; }
+    }
+    if (allInside) { best = mid; lo = mid; } else { hi = mid; }
+  }
+  return Math.max(0, best * 0.997);
+}
+
+function computePairInnerSize(outerRenderer, innerRenderer, outerSize, cx, cy) {
+  const ok = outerRenderer?.getKey?.();
+  const ik = innerRenderer?.getKey?.();
+  const SQRT3 = Math.sqrt(3);
+  
+  if (ok === 'circle' && ik === 'triangle') {
+    return outerSize * SQRT3 / 2;
+  }
+  
+  if (ok === 'triangle' && ik === 'circle') {
+    return outerSize / SQRT3;
+  }
+  if (ok === 'circle' && ik === 'hexagon') {
+    return outerSize * 0.997;
+  }
+  if (ok === 'hexagon' && ik === 'circle') {
+    return outerSize * (Math.sqrt(3) / 2);
+  }
+  
+  if (ok === 'circle' && ik === 'square') {
+    return outerSize / Math.sqrt(2);
+  }
+  if (ok === 'square' && ik === 'circle') {
+    return outerSize;
+  }
+  if (ok === 'square' && ik === 'triangle') {
+    return fitInnerSize(outerRenderer, outerSize, innerRenderer, cx, cy);
+  }
+  if (ok === 'triangle' && ik === 'square') {
+    return fitInnerSize(outerRenderer, outerSize, innerRenderer, cx, cy);
+  }
+  
+  if (ok === 'circle' && (ik === 'octagon' || ik === 'dodecagon')) {
+    return outerSize * 0.997;
+  }
+  if ((ok === 'octagon' || ok === 'dodecagon') && ik === 'circle') {
+    const apothemRatio = ok === 'octagon' ? 0.924 : 0.966;
+    return outerSize * apothemRatio;
+  }
+  
+  if (ok === 'dodecagon' && ik === 'octagon') {
+    return fitInnerSize(outerRenderer, outerSize, innerRenderer, cx, cy);
+  }
+  
+  if (ok === 'octagon' && ik === 'hexagon') {
+    return fitInnerSize(outerRenderer, outerSize, innerRenderer, cx, cy);
+  }
+  
+  if (ok === 'hexagon' && ik === 'square') {
+    return fitInnerSize(outerRenderer, outerSize, innerRenderer, cx, cy);
+  }
+  
+  return fitInnerSize(outerRenderer, outerSize, innerRenderer, cx, cy);
+}
+
 const NestedLayeredShape = ({
   // Strategy providers
   shapeRenderer,
@@ -75,121 +157,10 @@ const NestedLayeredShape = ({
   const cx = width / 2;
   const cy = height / 2;
 
-  if (baseSize <= 0) return null;
-
   const totalLayers = Math.max(2, stepsCount);
   const scaled = progress * totalLayers;
   const activeIndex = Math.floor(scaled);
   const localT = clamp01(scaled - activeIndex);
-
-  // Geometry helpers
-  function pointInPolygon(x, y, polygon) {
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const xi = polygon[i][0], yi = polygon[i][1];
-      const xj = polygon[j][0], yj = polygon[j][1];
-      const intersect = ((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / (yj - yi + 0.000001) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  }
-
-  function fitInnerSize(outerRenderer, outerSize, innerRenderer) {
-    const outerPoly = outerRenderer.getPolygonPoints(cx, cy, outerSize);
-    let lo = 0, hi = outerSize, best = 0;
-    for (let iter = 0; iter < 18; iter++) {
-      const mid = (lo + hi) / 2;
-      const innerPoly = innerRenderer.getPolygonPoints(cx, cy, mid);
-      let allInside = true;
-      for (let k = 0; k < innerPoly.length; k++) {
-        const [px, py] = innerPoly[k];
-        if (!pointInPolygon(px, py, outerPoly)) { allInside = false; break; }
-      }
-      if (allInside) { best = mid; lo = mid; } else { hi = mid; }
-    }
-    return Math.max(0, best * 0.997);
-  }
-
-  function computePairInnerSize(outerRenderer, innerRenderer, outerSize) {
-    const ok = outerRenderer?.getKey?.();
-    const ik = innerRenderer?.getKey?.();
-    const SQRT3 = Math.sqrt(3);
-    
-    if (ok === 'circle' && ik === 'triangle') {
-      // Circle (outer): size = diameter D; radius R = D/2
-      // Triangle inscribed: side a = R*sqrt(3) = (D/2)*sqrt(3) = D*sqrt(3)/2
-      return outerSize * SQRT3 / 2;
-    }
-    
-    if (ok === 'triangle' && ik === 'circle') {
-      // Triangle (outer): size = base width w
-      // Circumradius R = w/sqrt(3)
-      // Inradius r = R/2 = w/(2*sqrt(3))
-      // Circle diameter D = 2r = w/sqrt(3)
-      return outerSize / SQRT3;
-    }
-    if (ok === 'circle' && ik === 'hexagon') {
-      // Regular hexagon inscribed in circle: hex circumradius = R, so hex size (diameter) = 2R = circle size
-      // Nudge slightly in to avoid aliasing overlaps
-      return outerSize * 0.997;
-    }
-    if (ok === 'hexagon' && ik === 'circle') {
-      // Circle inscribed in hexagon: diameter = 2 * apothem = 2 * (R * sqrt(3)/2) = R*sqrt(3)
-      // Hex size uses diameter = 2R => circle diameter = (sqrt(3)/2) * hexDiameter
-      return outerSize * (Math.sqrt(3) / 2);
-    }
-    
-    // Square relationships
-    if (ok === 'circle' && ik === 'square') {
-      // Square inscribed in circle: diagonal = diameter D
-      // Side s = D/sqrt(2)
-      return outerSize / Math.sqrt(2);
-    }
-    if (ok === 'square' && ik === 'circle') {
-      // Circle inscribed in square: diameter = side s
-      return outerSize;
-    }
-    if (ok === 'square' && ik === 'triangle') {
-      // Triangle inscribed in square is complex; use geometric fit
-      return fitInnerSize(outerRenderer, outerSize, innerRenderer);
-    }
-    if (ok === 'triangle' && ik === 'square') {
-      // Square inscribed in triangle is complex; use geometric fit
-      return fitInnerSize(outerRenderer, outerSize, innerRenderer);
-    }
-    
-    // Octagon and Dodecagon relationships
-    if (ok === 'circle' && (ik === 'octagon' || ik === 'dodecagon')) {
-      // Regular polygon inscribed in circle: polygon size = circle diameter
-      return outerSize * 0.997;
-    }
-    if ((ok === 'octagon' || ok === 'dodecagon') && ik === 'circle') {
-      // Circle inscribed in regular polygon: use apothem
-      // For octagon: apothem ≈ 0.924 * R (where R = size/2)
-      // For dodecagon: apothem ≈ 0.966 * R
-      const apothemRatio = ok === 'octagon' ? 0.924 : 0.966;
-      return outerSize * apothemRatio;
-    }
-    
-    // Dodecagon → Octagon
-    if (ok === 'dodecagon' && ik === 'octagon') {
-      // Use geometric fit for polygon-to-polygon
-      return fitInnerSize(outerRenderer, outerSize, innerRenderer);
-    }
-    
-    // Octagon → Hexagon
-    if (ok === 'octagon' && ik === 'hexagon') {
-      return fitInnerSize(outerRenderer, outerSize, innerRenderer);
-    }
-    
-    // Hexagon → Square
-    if (ok === 'hexagon' && ik === 'square') {
-      return fitInnerSize(outerRenderer, outerSize, innerRenderer);
-    }
-    
-    // Fallback to geometric fit
-    return fitInnerSize(outerRenderer, outerSize, innerRenderer);
-  }
 
   // Build renderers per layer and compute perfectly nested sizes
   const renderersPerLayer = useMemo(() => (
@@ -200,10 +171,10 @@ const NestedLayeredShape = ({
     const arr = new Array(totalLayers).fill(0);
     arr[0] = baseSize;
     for (let i = 0; i < totalLayers - 1; i++) {
-      arr[i + 1] = computePairInnerSize(renderersPerLayer[i], renderersPerLayer[i + 1], arr[i]);
+      arr[i + 1] = computePairInnerSize(renderersPerLayer[i], renderersPerLayer[i + 1], arr[i], cx, cy);
     }
     return arr;
-  }, [totalLayers, baseSize, renderersPerLayer]);
+  }, [totalLayers, baseSize, renderersPerLayer, cx, cy]);
 
   // Phase change fade snapshot
   const phaseKey = currentPhase?.phase?.key || '';
@@ -233,6 +204,8 @@ const NestedLayeredShape = ({
   }, [phaseKey, stepsCount, sizes, cx, cy, brightColor]);
 
   const smooth = ANIMATION_UTILS.transition({ property: 'opacity, transform, fill', duration: 400, easing: 'ease-in-out' });
+
+  if (baseSize <= 0) return null;
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">

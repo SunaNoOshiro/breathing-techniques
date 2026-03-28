@@ -17,7 +17,7 @@ class LocalizationStrategy {
    * @param {string} languageCode - Language code
    * @returns {Promise<object>} - Translations object
    */
-  async loadTranslations(languageCode) {
+  async loadTranslations(_languageCode) {
     throw new Error('loadTranslations method must be implemented by strategy');
   }
 
@@ -34,7 +34,7 @@ class LocalizationStrategy {
    * @param {string} languageCode - Language code
    * @returns {boolean} - True if supported
    */
-  supportsLanguage(languageCode) {
+  supportsLanguage(_languageCode) {
     throw new Error('supportsLanguage method must be implemented by strategy');
   }
 }
@@ -240,7 +240,7 @@ export const LocalizationProvider = ({ children }) => {
     };
 
     initializeLocalization();
-  }, [preferencesState]);
+  }, [detectLanguage, loadAvailableLanguages, loadTranslations, preferencesState]);
 
   // Detect language
   const detectLanguage = useCallback(async () => {
@@ -266,7 +266,7 @@ export const LocalizationProvider = ({ children }) => {
       Logger.warn("context", 'Failed to detect language:', error);
       return null;
     }
-  }, [storageService]);
+  }, [storageService, isLanguageAvailable]);
 
   // Check if language is available
   const isLanguageAvailable = useCallback(async (languageCode) => {
