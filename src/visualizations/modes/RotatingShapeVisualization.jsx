@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { VisualizationMode } from '../VisualizationMode.js';
 import { computeLungPaintFromTechnique } from '../../utils/colorUtils.js';
 import { ANIMATION_UTILS } from '../../utils/animationUtils.js';
@@ -56,14 +56,33 @@ function getNextRenderer(currentIndex, history) {
   };
 }
 
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+function withAlpha(rgbString, alpha) {
+  const m = rgbString.match(/rgb\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/i);
+  if (m) {
+    const r = parseInt(m[1], 10);
+    const g = parseInt(m[2], 10);
+    const b = parseInt(m[3], 10);
+    return `rgba(${r}, ${g}, ${b}, ${clamp01(alpha)})`;
+  }
+  const ma = rgbString.match(/rgba\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\)/i);
+  if (ma) {
+    const r = parseInt(ma[1], 10);
+    const g = parseInt(ma[2], 10);
+    const b = parseInt(ma[3], 10);
+    return `rgba(${r}, ${g}, ${b}, ${clamp01(alpha)})`;
+  }
+  return rgbString;
+}
+
 // Wrapper component with rotation
 function RotatingShapeWrapper(props) {
   const {
     currentTechnique,
     currentPhase,
     currentColors,
-    containerDimensions,
-    isRunning
+    containerDimensions
   } = props;
 
   const phaseKey = currentPhase?.phase?.key || '';
@@ -93,27 +112,6 @@ function RotatingShapeWrapper(props) {
 
 
   const { width, height } = containerDimensions || { width: 0, height: 0 };
-
-  // Helper function for alpha blending
-  const clamp01 = (v) => Math.max(0, Math.min(1, v));
-  const withAlpha = (rgbString, alpha) => {
-    const m = rgbString.match(/rgb\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/i);
-    if (m) {
-      const r = parseInt(m[1], 10);
-      const g = parseInt(m[2], 10);
-      const b = parseInt(m[3], 10);
-      return `rgba(${r}, ${g}, ${b}, ${clamp01(alpha)})`;
-    }
-    const ma = rgbString.match(/rgba\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([0-9.]+)\)/i);
-    if (ma) {
-      const r = parseInt(ma[1], 10);
-      const g = parseInt(ma[2], 10);
-      const b = parseInt(ma[3], 10);
-      return `rgba(${r}, ${g}, ${b}, ${clamp01(alpha)})`;
-    }
-    return rgbString;
-  };
-
   const computed = useMemo(() => {
     if (!currentTechnique || !currentPhase || !currentPhase.phase?.key) {
       return {
