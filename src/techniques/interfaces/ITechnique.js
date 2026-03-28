@@ -77,7 +77,7 @@ export class ITechnique {
    * @param {number} elapsedSeconds - Elapsed time in seconds
    * @returns {object} - Current phase information
    */
-  getCurrentPhase(elapsedSeconds) {
+  getCurrentPhase(_elapsedSeconds) {
     throw new Error('getCurrentPhase method must be implemented');
   }
 
@@ -110,7 +110,7 @@ export class IVisualization {
    * @param {number} duration - Phase duration
    * @returns {number} - Lung scaling factor
    */
-  getLungScaling(phaseKey, timeInPhase, duration) {
+  getLungScaling(_phaseKey, _timeInPhase, _duration) {
     throw new Error('getLungScaling method must be implemented');
   }
 
@@ -119,7 +119,7 @@ export class IVisualization {
    * @param {number} lungScaling - Lung scaling factor
    * @returns {number} - Diaphragm Y offset
    */
-  getDiaphragmOffset(lungScaling) {
+  getDiaphragmOffset(_lungScaling) {
     throw new Error('getDiaphragmOffset method must be implemented');
   }
 }
@@ -142,7 +142,7 @@ export class IColorable {
    * @param {string} phaseKey - Phase key
    * @returns {object} - Phase colors
    */
-  getPhaseColors(phaseKey) {
+  getPhaseColors(_phaseKey) {
     throw new Error('getPhaseColors method must be implemented');
   }
 }
@@ -187,7 +187,7 @@ export class IAudioEnabled {
    * @param {string} phaseKey - Phase key
    * @returns {object} - Phase audio settings
    */
-  getPhaseAudio(phaseKey) {
+  getPhaseAudio(_phaseKey) {
     throw new Error('getPhaseAudio method must be implemented');
   }
 }
@@ -218,7 +218,7 @@ export class IDifficulty {
    * @param {string} level - User level
    * @returns {boolean} - True if suitable
    */
-  isSuitableForLevel(level) {
+  isSuitableForLevel(_level) {
     throw new Error('isSuitableForLevel method must be implemented');
   }
 }
@@ -232,7 +232,7 @@ export class IAnalytics {
    * Track technique usage
    * @param {object} data - Usage data
    */
-  trackUsage(data) {
+  trackUsage(_data) {
     throw new Error('trackUsage method must be implemented');
   }
 
@@ -262,7 +262,7 @@ export class IConfigurable {
    * Update technique configuration
    * @param {object} config - New configuration
    */
-  updateConfiguration(config) {
+  updateConfiguration(_config) {
     throw new Error('updateConfiguration method must be implemented');
   }
 

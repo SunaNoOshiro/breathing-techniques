@@ -3,6 +3,7 @@ import { ClassicVisualization } from './modes/ClassicVisualization.jsx';
 import { RandomObjectVisualization } from './modes/RandomObjectVisualization.jsx';
 import { DecreasingAnglesVisualization } from './modes/DecreasingAnglesVisualization.jsx';
 import { RotatingShapeVisualization } from './modes/RotatingShapeVisualization.jsx';
+import { SpiralDanceVisualization } from './modes/SpiralDanceVisualization.jsx';
 
 // Individual shape modes (kept for future extensibility)
 import { CircleLayeredVisualization } from './modes/CircleLayeredVisualization.jsx';
@@ -15,6 +16,7 @@ visualizationModeManager.register(new ClassicVisualization());
 visualizationModeManager.register(new RandomObjectVisualization());
 visualizationModeManager.register(new DecreasingAnglesVisualization());
 visualizationModeManager.register(new RotatingShapeVisualization());
+visualizationModeManager.register(new SpiralDanceVisualization());
 
 // Individual shape modes available but not registered
 // To re-enable, uncomment these lines:
@@ -24,5 +26,4 @@ visualizationModeManager.register(new RotatingShapeVisualization());
 // visualizationModeManager.register(new SquareLayeredVisualization());
 
 export { visualizationModeManager } from './VisualizationModeManager.js';
-
 

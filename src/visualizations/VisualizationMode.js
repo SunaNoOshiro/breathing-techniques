@@ -23,11 +23,10 @@ export class VisualizationMode {
    *  - lungData, diaphragmOffset
    * @returns {React.ReactNode}
    */
-  render(props) {
+  render(_props) {
     throw new Error('render(props) must be implemented');
   }
 }
-
 
 
 

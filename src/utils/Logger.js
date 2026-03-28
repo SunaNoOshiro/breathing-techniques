@@ -61,7 +61,7 @@ class Logger {
       if (stored) {
         try {
           return new Set(JSON.parse(stored));
-        } catch (e) {
+        } catch {
           // Invalid JSON, ignore
         }
       }
@@ -251,6 +251,5 @@ if (typeof window !== 'undefined') {
 
 export default logger;
 export { LOG_LEVELS };
-
 
 

@@ -226,7 +226,7 @@ export const BreathingProvider = ({ children }) => {
   }, [sessionState, audioService, vibrationService, preferencesState]);
 
   // Cycle complete handler
-  const handleCycleComplete = useCallback((data) => {
+  const handleCycleComplete = useCallback((_data) => {
     Logger.info('context', '🎉 CYCLE COMPLETE');
     // Note: Cycle complete vibration removed - was causing all subsequent vibrations 
     // to become strong (50ms) instead of regular (10ms) after first cycle

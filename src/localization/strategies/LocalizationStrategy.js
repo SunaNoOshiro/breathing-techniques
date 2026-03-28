@@ -18,7 +18,7 @@ export class LocalizationStrategy {
    * @param {string} language - Language code
    * @returns {Promise<object>} - Translations object
    */
-  async loadTranslations(language) {
+  async loadTranslations(_language) {
     throw new Error('loadTranslations method must be implemented');
   }
 
@@ -28,7 +28,7 @@ export class LocalizationStrategy {
    * @param {object} params - Parameters for interpolation
    * @returns {string} - Translated string
    */
-  translate(key, params = {}) {
+  translate(key, _params = {}) {
     throw new Error('translate method must be implemented');
   }
 
@@ -37,7 +37,7 @@ export class LocalizationStrategy {
    * @param {string} language - Language code
    * @returns {boolean} - True if loaded
    */
-  isLoaded(language) {
+  isLoaded(_language) {
     throw new Error('isLoaded method must be implemented');
   }
 

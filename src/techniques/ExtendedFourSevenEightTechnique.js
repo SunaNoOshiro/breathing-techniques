@@ -59,12 +59,14 @@ export class ExtendedFourSevenEightTechnique extends BaseTechnique {
     const targetExhale = 0.9; // Slightly smaller for extended exhale
     
     switch (phaseKey) {
-      case 'inhale':
+      case 'inhale': {
         const inhaleStep = (targetInhale - 1) / duration;
         return 1 + inhaleStep * Math.min(timeInPhase + 1, duration);
-      case 'exhale':
+      }
+      case 'exhale': {
         const exhaleStep = (targetInhale - targetExhale) / duration;
         return targetInhale - exhaleStep * Math.min(timeInPhase + 1, duration);
+      }
       case 'hold1':
         return targetInhale;
       default:

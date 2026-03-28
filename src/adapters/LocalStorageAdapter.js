@@ -26,7 +26,7 @@ export class LocalStorageAdapter extends StorageAdapter {
       this.storage.setItem(testKey, 'test');
       this.storage.removeItem(testKey);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -237,7 +237,7 @@ export class LocalStorageAdapter extends StorageAdapter {
         available: estimate.quota - estimate.usage,
         percentage: estimate.quota ? (estimate.usage / estimate.quota) * 100 : 0
       };
-    } catch (error) {
+    } catch {
       // Quota API not supported or failed
       return null;
     }

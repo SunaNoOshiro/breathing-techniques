@@ -73,8 +73,6 @@ const LayeredShape = ({
   const cx = width / 2;
   const cy = height / 2;
 
-  if (baseSize <= 0) return null;
-
   const totalLayers = Math.max(2, stepsCount);
   const scaled = progress * totalLayers;
   const activeIndex = Math.floor(scaled);
@@ -119,6 +117,8 @@ const LayeredShape = ({
   }, [phaseKey, stepsCount, ratio, width, height, cx, cy, brightColor]);
 
   const smooth = ANIMATION_UTILS.transition({ property: 'opacity, transform, fill', duration: 400, easing: 'ease-in-out' });
+
+  if (baseSize <= 0) return null;
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">

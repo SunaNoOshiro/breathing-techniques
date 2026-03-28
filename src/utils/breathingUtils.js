@@ -187,7 +187,9 @@ export class AudioManager {
     if (!this.audioCtx) {
       try { 
         this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
-      } catch {}
+      } catch {
+        // AudioContext is unavailable in this environment.
+      }
     }
     if (this.audioCtx?.state === 'suspended') {
       this.audioCtx.resume().catch(() => {});

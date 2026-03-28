@@ -15,7 +15,7 @@ export class ThemeStrategy {
    * @param {string} themeKey - Theme key
    * @param {object} context - Application context
    */
-  applyTheme(themeKey, context) {
+  applyTheme(_themeKey, _context) {
     throw new Error('applyTheme method must be implemented by strategy');
   }
 
@@ -24,7 +24,7 @@ export class ThemeStrategy {
    * @param {string} themeKey - Theme key
    * @returns {object} - Theme colors
    */
-  getThemeColors(themeKey) {
+  getThemeColors(_themeKey) {
     throw new Error('getThemeColors method must be implemented by strategy');
   }
 
@@ -41,7 +41,7 @@ export class ThemeStrategy {
    * @param {string} themeKey - Theme key
    * @returns {boolean} - True if supported
    */
-  supportsTheme(themeKey) {
+  supportsTheme(_themeKey) {
     throw new Error('supportsTheme method must be implemented by strategy');
   }
 
@@ -84,7 +84,7 @@ export class CSSThemeStrategy extends ThemeStrategy {
    * @param {string} themeKey - Theme key
    * @param {object} context - Application context
    */
-  applyTheme(themeKey, context) {
+  applyTheme(themeKey, _context) {
     Logger.debug("strategy", 'CSSThemeStrategy.applyTheme called with:', themeKey);
     const colors = this.getThemeColors(themeKey);
     Logger.debug("strategy", 'Theme colors:', colors);
@@ -405,7 +405,7 @@ export class DynamicThemeStrategy extends ThemeStrategy {
    * @param {string} background - Background color
    * @returns {string} - Adjusted color
    */
-  increaseContrast(color, background) {
+  increaseContrast(color, _background) {
     // Simple contrast adjustment - in real implementation would use proper color theory
     return color; // Placeholder
   }
@@ -416,7 +416,7 @@ export class DynamicThemeStrategy extends ThemeStrategy {
    * @param {string} type - Color type
    * @returns {string} - Adjusted color
    */
-  adjustForColorBlindness(color, type) {
+  adjustForColorBlindness(color, _type) {
     // Simple color blindness adjustment - in real implementation would use proper algorithms
     return color; // Placeholder
   }

@@ -363,7 +363,6 @@ export const ThemeProvider = ({ children }) => {
   }, [
     isLoading,
     error,
-    currentThemeColors,
     themeService,
     themeStrategyManager,
     changeTheme,

@@ -17,7 +17,7 @@ class LocalizationStrategy {
    * @param {string} languageCode - Language code
    * @returns {Promise<object>} - Translations object
    */
-  async loadTranslations(languageCode) {
+  async loadTranslations(_languageCode) {
     throw new Error('loadTranslations method must be implemented by strategy');
   }
 
@@ -34,7 +34,7 @@ class LocalizationStrategy {
    * @param {string} languageCode - Language code
    * @returns {boolean} - True if supported
    */
-  supportsLanguage(languageCode) {
+  supportsLanguage(_languageCode) {
     throw new Error('supportsLanguage method must be implemented by strategy');
   }
 }
@@ -209,65 +209,6 @@ export const LocalizationProvider = ({ children }) => {
 
   const strategyManager = useMemo(() => new LocalizationStrategyManager(), []);
 
-  // Initialize localization
-  useEffect(() => {
-    const initializeLocalization = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // Detect current language
-        const detectedLang = await detectLanguage();
-        const language = detectedLang || 'en';
-        setCurrentLanguage(language);
-
-        // Load translations
-        await loadTranslations(language);
-
-        // Load available languages
-        await loadAvailableLanguages();
-
-        // Update preferences
-        if (preferencesState) {
-          preferencesState.setCurrentLanguage(language);
-        }
-      } catch (err) {
-        setError(err.message);
-        Logger.error("context", 'Failed to initialize localization:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeLocalization();
-  }, [preferencesState]);
-
-  // Detect language
-  const detectLanguage = useCallback(async () => {
-    try {
-      // Check storage first
-      if (storageService) {
-        const storedLang = await storageService.get('breathing-app-language');
-        if (storedLang && await isLanguageAvailable(storedLang)) {
-          return storedLang;
-        }
-      }
-
-      // Check browser language
-      const browserLang = navigator.language || navigator.userLanguage;
-      const langCode = browserLang.split('-')[0];
-
-      if (await isLanguageAvailable(langCode)) {
-        return langCode;
-      }
-
-      return null;
-    } catch (error) {
-      Logger.warn("context", 'Failed to detect language:', error);
-      return null;
-    }
-  }, [storageService]);
-
   // Check if language is available
   const isLanguageAvailable = useCallback(async (languageCode) => {
     try {
@@ -314,6 +255,67 @@ export const LocalizationProvider = ({ children }) => {
 
     setAvailableLanguages(languages);
   }, [strategyManager]);
+
+  // Detect language
+  const detectLanguage = useCallback(async () => {
+    try {
+      // Check storage first
+      if (storageService) {
+        const storedLang = await storageService.get('breathing-app-language');
+        if (storedLang && await isLanguageAvailable(storedLang)) {
+          return storedLang;
+        }
+      }
+
+      // Check browser language
+      const browserLang = navigator.language || navigator.userLanguage;
+      const langCode = browserLang.split('-')[0];
+
+      if (await isLanguageAvailable(langCode)) {
+        return langCode;
+      }
+
+      return null;
+    } catch (error) {
+      Logger.warn("context", 'Failed to detect language:', error);
+      return null;
+    }
+  }, [storageService, isLanguageAvailable]);
+
+  // Initialize localization
+  useEffect(() => {
+    const initializeLocalization = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Detect current language
+        const detectedLang = await detectLanguage();
+        const language = detectedLang || 'en';
+        setCurrentLanguage(language);
+
+        // Load translations
+        await loadTranslations(language);
+
+        // Load available languages
+        await loadAvailableLanguages();
+
+        // Update preferences
+        if (preferencesState) {
+          preferencesState.setCurrentLanguage(language);
+        }
+      } catch (err) {
+        setError(err.message);
+        Logger.error("context", 'Failed to initialize localization:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeLocalization();
+    // Keep localization bootstrap tied to preference-state availability, matching pre-Spiral behavior.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferencesState]);
 
   // Change language
   const changeLanguage = useCallback(async (newLanguage) => {

@@ -21,7 +21,7 @@ export class StorageAdapter {
    * @param {string} key - Storage key
    * @returns {Promise<any>} - Stored value or null if not found
    */
-  async get(key) {
+  async get(_key) {
     throw new Error('get method must be implemented by subclass');
   }
 
@@ -31,7 +31,7 @@ export class StorageAdapter {
    * @param {any} value - Value to store
    * @returns {Promise<void>}
    */
-  async set(key, value) {
+  async set(_key, _value) {
     throw new Error('set method must be implemented by subclass');
   }
 
@@ -40,7 +40,7 @@ export class StorageAdapter {
    * @param {string} key - Storage key
    * @returns {Promise<void>}
    */
-  async remove(key) {
+  async remove(_key) {
     throw new Error('remove method must be implemented by subclass');
   }
 
@@ -65,7 +65,7 @@ export class StorageAdapter {
    * @param {string} key - Storage key
    * @returns {Promise<boolean>} - True if key exists
    */
-  async has(key) {
+  async has(_key) {
     throw new Error('has method must be implemented by subclass');
   }
 

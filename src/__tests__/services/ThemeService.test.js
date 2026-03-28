@@ -33,7 +33,7 @@ describe('ThemeService', () => {
 
     test('should load theme from storage on initialization', () => {
       mockStorageAdapter.get.mockReturnValue('light');
-      const newThemeService = new ThemeService(mockStorageAdapter);
+      new ThemeService(mockStorageAdapter);
       
       expect(mockStorageAdapter.get).toHaveBeenCalledWith('theme');
     });
@@ -126,4 +126,3 @@ describe('ThemeService', () => {
     });
   });
 });
-

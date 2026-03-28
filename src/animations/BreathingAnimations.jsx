@@ -3,6 +3,7 @@
  * Provides accessible, configurable animations with reduced motion support
  */
 
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
 /**

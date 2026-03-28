@@ -13,7 +13,7 @@ export class ErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(_error) {
     // Update state so the next render will show the fallback UI
     return { hasError: true };
   }
@@ -91,7 +91,7 @@ function ErrorFallback({ error, errorInfo, onRetry, fallback }) {
         We're sorry, but something unexpected happened. Please try refreshing the page or contact support if the problem persists.
       </p>
 
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <details style={{ marginBottom: '1rem' }}>
           <summary 
             style={{ cursor: 'pointer', fontWeight: 'bold' }}
@@ -163,7 +163,7 @@ export class TechniqueErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(_error) {
     return { hasError: true };
   }
 
@@ -192,7 +192,7 @@ export class TechniqueErrorBoundary extends React.Component {
  * Technique Error Fallback Component
  * Specialized error display for technique errors
  */
-function TechniqueErrorFallback({ error, onRetry, techniqueId }) {
+function TechniqueErrorFallback({ _error, onRetry, techniqueId }) {
   const accessibility = useAccessibility();
 
   React.useEffect(() => {

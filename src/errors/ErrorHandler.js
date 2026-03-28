@@ -208,7 +208,7 @@ export class ErrorHandler {
    * Notify error listeners
    */
   notifyListeners(error) {
-    this.listeners.forEach((callback, key) => {
+    this.listeners.forEach((callback, _key) => {
       try {
         callback(error);
       } catch (listenerError) {
@@ -322,7 +322,7 @@ export class ErrorHandler {
   /**
    * Create a safe error wrapper for async functions
    */
-  wrapAsync(fn, context = {}) {
+  wrapAsync(fn, _context = {}) {
     return async (...args) => {
       try {
         return await fn(...args);
@@ -336,7 +336,7 @@ export class ErrorHandler {
   /**
    * Create a safe error wrapper for sync functions
    */
-  wrapSync(fn, context = {}) {
+  wrapSync(fn, _context = {}) {
     return (...args) => {
       try {
         return fn(...args);

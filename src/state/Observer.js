@@ -13,7 +13,7 @@ export class Observer {
    * Update method called when observable changes
    * @param {any} data - Update data
    */
-  update(data) {
+  update(_data) {
     throw new Error('update method must be implemented by observer');
   }
 }

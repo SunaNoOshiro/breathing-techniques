@@ -7,6 +7,7 @@ import { StateManager } from './Observer.js';
 import { BreathingSessionState } from './BreathingSessionState.js';
 import { UserPreferencesState } from './UserPreferencesState.js';
 import { AppError, ERROR_CODES } from '../errors/AppError.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * App State Manager class
@@ -38,7 +39,7 @@ export class AppStateManager extends StateManager {
    */
   setupSubStateListeners() {
     // Listen to session state changes
-    this.sessionState.subscribe((data) => {
+    this.sessionState.subscribe((_data) => {
       this.notifyObservers({
         type: 'sessionStateChanged',
         sessionState: this.sessionState.getState(),
@@ -47,7 +48,7 @@ export class AppStateManager extends StateManager {
     });
 
     // Listen to preferences state changes
-    this.preferencesState.subscribe((data) => {
+    this.preferencesState.subscribe((_data) => {
       this.notifyObservers({
         type: 'preferencesStateChanged',
         preferences: this.preferencesState.getAllPreferences()
