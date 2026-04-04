@@ -15,14 +15,16 @@ const MODE_LABEL_KEYS = {
   classic: 'modeClassic',
   'random-object': 'modeRandom',
   'decreasing-angles': 'modeAngles',
-  rotating: 'modeRotating'
+  rotating: 'modeRotating',
+  'spiral-dance': 'modeSpiralDance'
 };
 const MODE_FALLBACK_LABELS = {
   'geometric-cascade': { en: 'Geometric Cascade', uk: 'Геометричний Каскад' },
   classic: { en: 'Classic Flow', uk: 'Класичний Потік' },
   'random-object': { en: 'Organic Pulse', uk: 'Органічний Пульс' },
   'decreasing-angles': { en: 'Angle Cascade', uk: 'Каскад Кутів' },
-  rotating: { en: 'Rotating Layers', uk: 'Обертальні Шари' }
+  rotating: { en: 'Rotating Layers', uk: 'Обертальні Шари' },
+  'spiral-dance': { en: 'Spiral Dance', uk: 'Спіральний Танець' }
 };
 
 const PHASE_COLORS = {
@@ -289,6 +291,8 @@ const VisualizationContainer = () => {
         return { sizeRatio: 0.74, offsetY: -8 };
       case 'rotating':
         return { sizeRatio: 0.74, offsetY: -8 };
+      case 'spiral-dance':
+        return { sizeRatio: 0.94, offsetY: 0 };
       default:
         return { sizeRatio: 0.74, offsetY: -8 };
     }
@@ -393,14 +397,20 @@ const VisualizationContainer = () => {
             {visualizationModeManager.render(currentModeKey, {
               visualizationPoints,
               isRunning,
+              isActive,
               activePointIndex,
               currentTechnique,
               themeColors,
               currentColors,
               containerDimensions: legacyRenderDimensions,
               currentPhase: displayPhase,
+              phaseProgress: phaseView.progress,
+              phaseColor: phaseView.color,
+              trackColor: currentColors.border,
+              cycleIndex: sessionStats?.cyclesCompleted || 0,
               lungData,
-              diaphragmOffset
+              diaphragmOffset,
+              prefersReducedMotion
             })}
           </div>
         )}

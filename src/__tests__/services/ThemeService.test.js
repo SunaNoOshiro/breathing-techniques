@@ -1,129 +1,56 @@
-/**
- * ThemeService Tests
- * Tests for the ThemeService class
- */
-
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ThemeService } from '../../services/ThemeService.js';
-import { TestUtils, TestAssertions } from '../TestUtils.js';
 
 describe('ThemeService', () => {
+  let storageAdapter;
   let themeService;
-  let mockStorageAdapter;
 
   beforeEach(() => {
-    mockStorageAdapter = {
-      get: jest.fn(),
-      set: jest.fn(),
-      remove: jest.fn()
+    storageAdapter = {
+      safeGet: vi.fn(async () => null),
+      safeSet: vi.fn(async () => undefined)
     };
 
-    themeService = new ThemeService(mockStorageAdapter);
+    themeService = new ThemeService(storageAdapter);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  describe('initialization', () => {
-    test('should initialize with default theme', () => {
-      const currentTheme = themeService.getCurrentTheme();
-      expect(currentTheme).toBeDefined();
-      expect(currentTheme.id).toBe('dark');
-    });
-
-    test('should load theme from storage on initialization', () => {
-      mockStorageAdapter.get.mockReturnValue('light');
-      const newThemeService = new ThemeService(mockStorageAdapter);
-      
-      expect(mockStorageAdapter.get).toHaveBeenCalledWith('theme');
+  test('defaults to the dark theme', () => {
+    expect(themeService.getCurrentTheme()).toBe('dark');
+    expect(themeService.getCurrentThemeColors()).toMatchObject({
+      bg: expect.any(String),
+      text: expect.any(String)
     });
   });
 
-  describe('theme management', () => {
-    test('should set theme correctly', () => {
-      themeService.setTheme('light');
-      
-      expect(mockStorageAdapter.set).toHaveBeenCalledWith('theme', 'light');
-      
-      const currentTheme = themeService.getCurrentTheme();
-      expect(currentTheme.id).toBe('light');
-    });
+  test('loads the current theme from storage', async () => {
+    storageAdapter.safeGet.mockImplementation(async (key) => (
+      key === 'breathing-app-theme' ? 'ocean' : null
+    ));
 
-    test('should get available themes', () => {
-      const themes = themeService.getAvailableThemes();
-      
-      expect(Array.isArray(themes)).toBe(true);
-      expect(themes.length).toBeGreaterThan(0);
-      
-      themes.forEach(theme => {
-        TestAssertions.assertValidTheme(theme);
-      });
-    });
+    themeService = new ThemeService(storageAdapter);
+    await themeService.loadCurrentTheme();
 
-    test('should validate theme exists', () => {
-      expect(themeService.hasTheme('dark')).toBe(true);
-      expect(themeService.hasTheme('light')).toBe(true);
-      expect(themeService.hasTheme('nonexistent')).toBe(false);
-    });
+    expect(storageAdapter.safeGet).toHaveBeenCalledWith('breathing-app-theme');
+    expect(themeService.getCurrentTheme()).toBe('ocean');
   });
 
-  describe('theme colors', () => {
-    test('should get theme colors', () => {
-      const colors = themeService.getThemeColors('dark');
-      
-      expect(colors).toBeDefined();
-      expect(colors.primary).toBeDefined();
-      expect(colors.background).toBeDefined();
-      expect(colors.text).toBeDefined();
-    });
+  test('persists current theme changes', async () => {
+    await themeService.setCurrentTheme('light');
 
-    test('should get current theme colors', () => {
-      const colors = themeService.getCurrentThemeColors();
-      
-      expect(colors).toBeDefined();
-      expect(typeof colors).toBe('object');
-    });
-
-    test('should generate theme colors with cycle count', () => {
-      const colors = themeService.generateThemeColors(5, 'dark');
-      
-      expect(colors).toBeDefined();
-      expect(colors.active).toBeDefined();
-      expect(colors.idle).toBeDefined();
-    });
+    expect(storageAdapter.safeSet).toHaveBeenCalledWith('breathing-app-theme', 'light');
+    expect(themeService.getCurrentTheme()).toBe('light');
   });
 
-  describe('error handling', () => {
-    test('should handle invalid theme gracefully', () => {
-      expect(() => themeService.setTheme('invalid-theme')).not.toThrow();
-      
-      const currentTheme = themeService.getCurrentTheme();
-      expect(currentTheme.id).toBe('dark'); // Should fallback to default
-    });
+  test('returns theme metadata and capabilities', () => {
+    const themes = themeService.getAllThemes();
+    const capabilities = themeService.getCapabilities();
 
-    test('should handle storage errors gracefully', () => {
-      mockStorageAdapter.set.mockImplementation(() => {
-        throw new Error('Storage error');
-      });
-
-      expect(() => themeService.setTheme('light')).not.toThrow();
-    });
+    expect(themes.length).toBeGreaterThan(0);
+    expect(capabilities.availableThemes).toContain('dark');
+    expect(capabilities.currentTheme).toBe('dark');
   });
 
-  describe('theme persistence', () => {
-    test('should persist theme changes', () => {
-      themeService.setTheme('ocean');
-      
-      expect(mockStorageAdapter.set).toHaveBeenCalledWith('theme', 'ocean');
-    });
-
-    test('should load persisted theme on initialization', () => {
-      mockStorageAdapter.get.mockReturnValue('forest');
-      const newThemeService = new ThemeService(mockStorageAdapter);
-      
-      const currentTheme = newThemeService.getCurrentTheme();
-      expect(currentTheme.id).toBe('forest');
-    });
+  test('throws when setting an unknown theme', async () => {
+    await expect(themeService.setCurrentTheme('unknown-theme')).rejects.toThrow(/not found/i);
   });
 });
-

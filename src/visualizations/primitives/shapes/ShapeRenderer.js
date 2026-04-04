@@ -15,7 +15,7 @@ export class ShapeRenderer {
    * @param {string} fill
    * @returns {React.ReactNode}
    */
-  render(cx, cy, size, fill) {
+  render(_cx, _cy, _size, _fill) {
     throw new Error('render(cx, cy, size, fill) must be implemented');
   }
 
@@ -27,9 +27,8 @@ export class ShapeRenderer {
    * @param {number} samples - for curved shapes (e.g., circle)
    * @returns {Array<[number, number]>}
    */
-  getPolygonPoints(cx, cy, size, samples = 60) {
+  getPolygonPoints(_cx, _cy, _size, _samples = 60) {
     throw new Error('getPolygonPoints(cx, cy, size, samples) must be implemented');
   }
 }
-
 

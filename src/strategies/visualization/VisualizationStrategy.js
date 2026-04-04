@@ -14,7 +14,7 @@ export class VisualizationStrategy {
    * @param {object} technique - Technique object
    * @returns {Array} - Array of visualization points
    */
-  generatePoints(technique) {
+  generatePoints(_technique) {
     throw new Error('generatePoints method must be implemented by strategy');
   }
 
@@ -31,7 +31,7 @@ export class VisualizationStrategy {
    * @param {object} technique - Technique object
    * @returns {boolean} - True if supported
    */
-  supportsTechnique(technique) {
+  supportsTechnique(_technique) {
     throw new Error('supportsTechnique method must be implemented by strategy');
   }
 

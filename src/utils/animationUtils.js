@@ -216,7 +216,6 @@ export const ANIMATION_UTILS = {
    */
   breathing(options = {}) {
     const duration = this.getDuration(options.duration || 4000);
-    const scale = options.scale || 1.2;
     
     return {
       animation: `breathing ${duration}ms ease-in-out infinite`,
@@ -232,7 +231,6 @@ export const ANIMATION_UTILS = {
    */
   pulse(options = {}) {
     const duration = this.getDuration(options.duration || 1000);
-    const scale = options.scale || 1.1;
     
     return {
       animation: `pulse ${duration}ms ease-in-out infinite`,
@@ -266,7 +264,6 @@ export const ANIMATION_UTILS = {
    */
   slide(direction, options = {}) {
     const duration = this.getDuration(options.duration || 400);
-    const distance = options.distance || '100%';
     
     return {
       animation: `slide${direction} ${duration}ms ease-out`,
@@ -283,7 +280,6 @@ export const ANIMATION_UTILS = {
    */
   scale(type, options = {}) {
     const duration = this.getDuration(options.duration || 250);
-    const scale = options.scale || (type === 'in' ? 1.1 : 0.9);
     
     return {
       animation: `scale${type} ${duration}ms ease-out`,

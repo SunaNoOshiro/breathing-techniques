@@ -3,15 +3,13 @@
  * Provides accessibility utilities and state management for components
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AccessibilityUtils } from './AccessibilityUtils.js';
 
 export function useAccessibility() {
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const [isHighContrast, setIsHighContrast] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
-  const announcementRef = useRef(null);
-
   // Check for reduced motion preference
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');

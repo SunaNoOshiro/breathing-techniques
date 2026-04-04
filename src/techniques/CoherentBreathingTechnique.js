@@ -58,12 +58,14 @@ export class CoherentBreathingTechnique extends BaseTechnique {
     const targetExhale = 0.9;
     
     switch (phaseKey) {
-      case 'inhale':
+      case 'inhale': {
         const inhaleStep = (targetInhale - 1) / duration;
         return 1 + inhaleStep * Math.min(timeInPhase + 1, duration);
-      case 'exhale':
+      }
+      case 'exhale': {
         const exhaleStep = (targetInhale - targetExhale) / duration;
         return targetInhale - exhaleStep * Math.min(timeInPhase + 1, duration);
+      }
       default:
         return 1.0;
     }

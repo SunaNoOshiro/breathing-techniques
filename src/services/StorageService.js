@@ -4,7 +4,6 @@
  */
 
 import { ServiceError, ERROR_CODES } from '../errors/AppError.js';
-import { errorHandler } from '../errors/ErrorHandler.js';
 import { StorageAdapter } from '../adapters/StorageAdapter.js';
 
 /**

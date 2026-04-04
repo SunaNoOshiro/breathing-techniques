@@ -15,7 +15,7 @@ export class Command {
    * @param {object} context - Execution context
    * @returns {Promise<any>} - Command result
    */
-  async execute(context) {
+  async execute(_context) {
     throw new Error('execute method must be implemented by command');
   }
 
@@ -24,7 +24,7 @@ export class Command {
    * @param {object} context - Execution context
    * @returns {Promise<any>} - Undo result
    */
-  async undo(context) {
+  async undo(_context) {
     throw new Error('undo method must be implemented by command');
   }
 
@@ -57,7 +57,7 @@ export class Command {
    * @param {object} params - Command parameters
    * @returns {boolean} - True if valid
    */
-  validate(params) {
+  validate(_params) {
     return true;
   }
 }
@@ -217,7 +217,7 @@ export class StartBreathingCommand extends Command {
    * @param {object} params - Command parameters
    * @returns {boolean} - True if valid
    */
-  validate(params) {
+  validate(_params) {
     return this.techniqueId && this.technique;
   }
 }
@@ -482,7 +482,7 @@ export class ChangeTechniqueCommand extends Command {
    * @param {object} params - Command parameters
    * @returns {boolean} - True if valid
    */
-  validate(params) {
+  validate(_params) {
     return this.newTechniqueId && this.newTechnique;
   }
 }
@@ -601,7 +601,7 @@ export class ChangeThemeCommand extends Command {
    * @param {object} params - Command parameters
    * @returns {boolean} - True if valid
    */
-  validate(params) {
+  validate(_params) {
     return this.newTheme && typeof this.newTheme === 'string';
   }
 }
@@ -660,8 +660,6 @@ export class CommandInvoker {
       this.addToHistory(command);
 
       return result;
-    } catch (error) {
-      throw error;
     } finally {
       this.isExecuting = false;
     }

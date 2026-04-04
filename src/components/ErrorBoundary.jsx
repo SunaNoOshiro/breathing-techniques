@@ -7,6 +7,8 @@ import React from 'react';
 import { AppError, ERROR_CODES } from '../errors/AppError.js';
 import Logger from '../utils/Logger.js';
 
+const SHOW_DEV_DETAILS = import.meta.env.DEV;
+
 /**
  * Base Error Boundary Component
  */
@@ -216,7 +218,7 @@ export const ErrorBoundary = ({ children, onError, ...props }) => {
       onError={onError}
       title="Application Error"
       message="Something went wrong with the application. Please refresh the page or try again."
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={SHOW_DEV_DETAILS}
       showReportButton={true}
       {...props}
     >
@@ -235,7 +237,7 @@ export const TechniqueErrorBoundary = ({ children, onError, ...props }) => {
       onError={onError}
       title="Breathing Technique Error"
       message="There was an issue with the breathing technique. Please select a different technique or try again."
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={SHOW_DEV_DETAILS}
       showReportButton={true}
       {...props}
     >
@@ -254,7 +256,7 @@ export const VisualizationErrorBoundary = ({ children, onError, ...props }) => {
       onError={onError}
       title="Visualization Error"
       message="There was an issue displaying the breathing visualization. The technique will still work, but the visual guide may not be available."
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={SHOW_DEV_DETAILS}
       showReportButton={false}
       {...props}
     >
@@ -273,7 +275,7 @@ export const ServiceErrorBoundary = ({ children, onError, ...props }) => {
       onError={onError}
       title="Service Error"
       message="A service is temporarily unavailable. Some features may not work properly."
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={SHOW_DEV_DETAILS}
       showReportButton={true}
       {...props}
     >
@@ -292,7 +294,7 @@ export const ThemeErrorBoundary = ({ children, onError, ...props }) => {
       onError={onError}
       title="Theme Error"
       message="There was an issue with the theme. The application will use the default theme."
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={SHOW_DEV_DETAILS}
       showReportButton={false}
       {...props}
     >
@@ -311,7 +313,7 @@ export const LocalizationErrorBoundary = ({ children, onError, ...props }) => {
       onError={onError}
       title="Language Error"
       message="There was an issue loading the selected language. The application will use English."
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={SHOW_DEV_DETAILS}
       showReportButton={false}
       {...props}
     >
@@ -330,7 +332,7 @@ export const AudioErrorBoundary = ({ children, onError, ...props }) => {
       onError={onError}
       title="Audio Error"
       message="There was an issue with audio playback. The breathing technique will work without sound."
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={SHOW_DEV_DETAILS}
       showReportButton={false}
       {...props}
     >
@@ -349,7 +351,7 @@ export const VibrationErrorBoundary = ({ children, onError, ...props }) => {
       onError={onError}
       title="Vibration Error"
       message="There was an issue with device vibration. The breathing technique will work without vibration."
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={SHOW_DEV_DETAILS}
       showReportButton={false}
       {...props}
     >

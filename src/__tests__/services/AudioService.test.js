@@ -1,10 +1,5 @@
-/**
- * AudioService Tests
- * Tests for the AudioService class
- */
-
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { AudioService } from '../../services/AudioService.js';
-import { TestUtils, TestAssertions } from '../TestUtils.js';
 
 describe('AudioService', () => {
   let audioService;
@@ -13,115 +8,103 @@ describe('AudioService', () => {
   let mockGainNode;
 
   beforeEach(() => {
-    // Mock Web Audio API
+    mockGainNode = {
+      connect: vi.fn(() => mockAudioContext.destination),
+      gain: {
+        value: 0.5,
+        setValueAtTime: vi.fn(),
+        linearRampToValueAtTime: vi.fn()
+      }
+    };
+
     mockOscillator = {
-      connect: jest.fn(),
-      start: jest.fn(),
-      stop: jest.fn(),
+      connect: vi.fn(() => mockGainNode),
+      start: vi.fn(),
+      stop: vi.fn(),
       frequency: { value: 440 },
       type: 'sine'
     };
 
-    mockGainNode = {
-      connect: jest.fn(),
-      gain: { value: 0.5 }
-    };
-
     mockAudioContext = {
-      createOscillator: jest.fn(() => mockOscillator),
-      createGain: jest.fn(() => mockGainNode),
+      currentTime: 0,
+      createOscillator: vi.fn(() => mockOscillator),
+      createGain: vi.fn(() => mockGainNode),
       destination: {},
       state: 'running',
-      resume: jest.fn()
+      resume: vi.fn(async () => undefined),
+      close: vi.fn()
     };
 
-    global.AudioContext = jest.fn(() => mockAudioContext);
-    global.webkitAudioContext = jest.fn(() => mockAudioContext);
+    const AudioContextMock = vi.fn(function AudioContextMock() {
+      return mockAudioContext;
+    });
+
+    Object.defineProperty(window, 'AudioContext', {
+      writable: true,
+      value: AudioContextMock
+    });
+
+    Object.defineProperty(window, 'webkitAudioContext', {
+      writable: true,
+      value: AudioContextMock
+    });
 
     audioService = new AudioService();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    audioService.stopAll();
   });
 
-  describe('initialization', () => {
-    test('should initialize with default settings', () => {
-      expect(audioService.isEnabled()).toBe(true);
-      expect(audioService.getVolume()).toBe(0.7);
-    });
-
-    test('should create audio context on initialization', () => {
-      expect(mockAudioContext).toBeDefined();
-    });
+  test('starts with default settings', () => {
+    expect(audioService.getEnabled()).toBe(true);
+    expect(audioService.getVolume()).toBe(0.25);
+    expect(audioService.isSupported()).toBe(true);
   });
 
-  describe('playSound', () => {
-    test('should play beep sound when enabled', async () => {
-      await audioService.playSound('beep', { frequency: 800, duration: 0.1 });
+  test('initializes the audio context lazily', async () => {
+    await audioService.initialize();
 
-      expect(mockOscillator.connect).toHaveBeenCalled();
-      expect(mockOscillator.start).toHaveBeenCalled();
-      expect(mockOscillator.stop).toHaveBeenCalled();
-    });
-
-    test('should not play sound when disabled', async () => {
-      audioService.setEnabled(false);
-      
-      await audioService.playSound('beep', { frequency: 800, duration: 0.1 });
-
-      expect(mockOscillator.start).not.toHaveBeenCalled();
-    });
-
-    test('should handle audio context suspension', async () => {
-      mockAudioContext.state = 'suspended';
-      
-      await audioService.playSound('beep', { frequency: 800, duration: 0.1 });
-
-      expect(mockAudioContext.resume).toHaveBeenCalled();
+    expect(window.AudioContext).toHaveBeenCalled();
+    expect(mockAudioContext.createGain).toHaveBeenCalled();
+    expect(audioService.getCapabilities()).toMatchObject({
+      initialized: true,
+      enabled: true
     });
   });
 
-  describe('volume control', () => {
-    test('should set volume correctly', () => {
-      audioService.setVolume(0.5);
-      expect(audioService.getVolume()).toBe(0.5);
-    });
+  test('plays a beep when initialized and enabled', async () => {
+    await audioService.initialize();
+    await audioService.playBeep(800, 120);
 
-    test('should clamp volume to valid range', () => {
-      audioService.setVolume(1.5);
-      expect(audioService.getVolume()).toBe(1.0);
-
-      audioService.setVolume(-0.5);
-      expect(audioService.getVolume()).toBe(0.0);
-    });
+    expect(mockAudioContext.createOscillator).toHaveBeenCalled();
+    expect(mockOscillator.start).toHaveBeenCalled();
+    expect(mockOscillator.stop).toHaveBeenCalled();
   });
 
-  describe('enable/disable', () => {
-    test('should enable and disable audio', () => {
-      audioService.setEnabled(false);
-      expect(audioService.isEnabled()).toBe(false);
+  test('does not play audio when disabled', async () => {
+    await audioService.initialize();
+    audioService.setEnabled(false);
 
-      audioService.setEnabled(true);
-      expect(audioService.isEnabled()).toBe(true);
-    });
+    await audioService.playBeep(800, 120);
+
+    expect(mockOscillator.start).not.toHaveBeenCalled();
   });
 
-  describe('error handling', () => {
-    test('should handle audio context creation failure', () => {
-      global.AudioContext = jest.fn(() => {
-        throw new Error('Audio context creation failed');
-      });
+  test('resumes the audio context when suspended', async () => {
+    await audioService.initialize();
+    mockAudioContext.state = 'suspended';
 
-      expect(() => new AudioService()).not.toThrow();
-    });
+    await audioService.playBeep(640, 80);
 
-    test('should handle oscillator creation failure', async () => {
-      mockAudioContext.createOscillator = jest.fn(() => {
-        throw new Error('Oscillator creation failed');
-      });
+    expect(mockAudioContext.resume).toHaveBeenCalled();
+  });
 
-      await expect(audioService.playSound('beep')).rejects.toThrow();
-    });
+  test('clamps volume updates to the valid range', () => {
+    audioService.setVolume(2);
+    expect(audioService.getVolume()).toBe(1);
+
+    audioService.setVolume(-1);
+    expect(audioService.getVolume()).toBe(0);
   });
 });

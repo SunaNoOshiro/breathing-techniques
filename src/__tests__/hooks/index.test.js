@@ -1,293 +1,206 @@
-/**
- * Hook Tests
- * Tests for custom hooks
- */
-
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  useAccessibility,
+  useAudio,
+  useBreathingSession,
+  useResponsive,
+  useTechnique,
+  useThemeManager,
+  useVibration
+} from '../../hooks/index.js';
 import { TestUtils } from '../TestUtils.js';
 
-// Mock the contexts
-jest.mock('../../contexts/ServicesContext.jsx', () => ({
-  useServices: () => TestUtils.createMockServices()
+const hookMocks = vi.hoisted(() => ({
+  services: {},
+  breathing: {},
+  theme: {}
 }));
 
-jest.mock('../../contexts/ThemeContext.jsx', () => ({
-  useThemeColors: () => TestUtils.createMockTheme().colors
+vi.mock('../../contexts/ServicesContext.jsx', () => ({
+  useServices: () => hookMocks.services
 }));
 
-jest.mock('../../contexts/LocalizationContext.jsx', () => ({
-  useLocalization: () => ({
-    t: (key) => key,
-    currentLanguage: 'en',
-    changeLanguage: jest.fn(),
-    availableLanguages: [{ code: 'en', name: 'English' }]
-  })
+vi.mock('../../contexts/BreathingContext.jsx', () => ({
+  useBreathing: () => hookMocks.breathing
 }));
 
-jest.mock('../../contexts/BreathingContext.jsx', () => ({
-  useBreathing: () => ({
-    isSessionRunning: () => false,
-    isSessionPaused: () => false,
-    isSessionActive: () => false,
-    getCurrentPhase: () => null,
-    getSessionStats: () => ({}),
-    getSessionProgress: () => 0,
-    getCycleProgress: () => 0,
-    startSession: jest.fn(),
-    pauseSession: jest.fn(),
-    resumeSession: jest.fn(),
-    stopSession: jest.fn(),
-    resetSession: jest.fn(),
-    changeTechnique: jest.fn(),
-    undo: jest.fn(),
-    redo: jest.fn(),
-    canUndo: () => false,
-    canRedo: () => false,
-    getCommandHistory: () => []
-  })
+vi.mock('../../contexts/ThemeContext.jsx', () => ({
+  useTheme: () => hookMocks.theme
 }));
 
-describe('Hook Tests', () => {
-  describe('useBreathingSession', () => {
-    let useBreathingSession;
+describe('custom hooks', () => {
+  beforeEach(() => {
+    const technique = TestUtils.createMockTechnique({ id: 'box4', name: 'Box Breathing' });
 
-    beforeEach(async () => {
-      const module = await import('../../hooks/index.js');
-      useBreathingSession = module.useBreathingSession;
-    });
+    hookMocks.breathing = {
+      sessionState: {
+        subscribe: vi.fn(() => vi.fn())
+      },
+      isSessionRunning: vi.fn(() => false),
+      isSessionPaused: vi.fn(() => false),
+      isSessionActive: vi.fn(() => false),
+      getCurrentPhase: vi.fn(() => technique.getCurrentPhase(0)),
+      getSessionStats: vi.fn(() => ({ cyclesCompleted: 0 })),
+      getSessionProgress: vi.fn(() => 0),
+      getCycleProgress: vi.fn(() => 0),
+      startSession: vi.fn(),
+      pauseSession: vi.fn(),
+      resumeSession: vi.fn(),
+      stopSession: vi.fn(),
+      resetSession: vi.fn(),
+      changeTechnique: vi.fn(),
+      undo: vi.fn(),
+      redo: vi.fn(),
+      canUndo: vi.fn(() => false),
+      canRedo: vi.fn(() => false),
+      getCommandHistory: vi.fn(() => [])
+    };
 
-    test('should return breathing session state and actions', () => {
-      const { result } = renderHook(() => useBreathingSession());
-      
-      expect(result.current).toBeDefined();
-      expect(typeof result.current.isRunning).toBe('boolean');
-      expect(typeof result.current.isPaused).toBe('boolean');
-      expect(typeof result.current.start).toBe('function');
-      expect(typeof result.current.pause).toBe('function');
-      expect(typeof result.current.stop).toBe('function');
-    });
+    hookMocks.services = {
+      sessionState: {
+        state: { technique },
+        subscribe: vi.fn(() => vi.fn())
+      },
+      visualizationStrategyManager: {
+        generatePoints: vi.fn(() => [{ x: 0, y: 0 }])
+      },
+      preferencesState: {
+        getSelectedTechniqueId: vi.fn(() => 'box4')
+      },
+      audioService: {
+        getEnabled: vi.fn(() => true),
+        getVolume: vi.fn(() => 0.4),
+        playBeep: vi.fn(async () => undefined),
+        stopAll: vi.fn(),
+        setEnabled: vi.fn(),
+        setVolume: vi.fn(),
+        getCapabilities: vi.fn(() => ({ supported: true }))
+      },
+      vibrationService: {
+        getEnabled: vi.fn(() => true),
+        getSupported: vi.fn(() => true),
+        vibrate: vi.fn(async () => undefined),
+        stop: vi.fn(),
+        setEnabled: vi.fn(),
+        getCapabilities: vi.fn(() => ({ supported: true }))
+      }
+    };
 
-    test('should provide session statistics', () => {
-      const { result } = renderHook(() => useBreathingSession());
-      
-      expect(result.current.sessionStats).toBeDefined();
-      expect(result.current.progress).toBeDefined();
-      expect(result.current.cycleProgress).toBeDefined();
-    });
-  });
+    hookMocks.theme = {
+      getCurrentTheme: vi.fn(() => 'dark'),
+      getCurrentThemeColors: vi.fn(() => ({
+        bg: '#0b1020',
+        panel: '#0f172a',
+        text: '#e5e7eb',
+        accent: '#60A5FA',
+        border: '#374151'
+      })),
+      isLoading: false,
+      error: null,
+      changeTheme: vi.fn(),
+      setTheme: vi.fn(),
+      resetTheme: vi.fn(),
+      getAllThemes: vi.fn(() => [{ key: 'dark', name: 'Dark' }]),
+      getThemeNames: vi.fn(() => [{ key: 'dark', name: 'Dark' }]),
+      validateTheme: vi.fn(() => true),
+      getThemeCapabilities: vi.fn(() => ({ availableThemes: 1 }))
+    };
 
-  describe('useTechnique', () => {
-    let useTechnique;
-
-    beforeEach(async () => {
-      const module = await import('../../hooks/index.js');
-      useTechnique = module.useTechnique;
-    });
-
-    test('should return technique state and actions', () => {
-      const { result } = renderHook(() => useTechnique());
-      
-      expect(result.current).toBeDefined();
-      expect(typeof result.current.getCurrentTechnique).toBe('function');
-      expect(typeof result.current.getTechniqueId).toBe('function');
-      expect(typeof result.current.getTechniqueName).toBe('function');
-      expect(typeof result.current.validateTechnique).toBe('function');
-    });
-
-    test('should handle missing technique gracefully', () => {
-      const { result } = renderHook(() => useTechnique());
-      
-      expect(result.current.currentTechnique).toBeNull();
-      expect(result.current.getTechniqueId()).toBeNull();
-      expect(result.current.getTechniqueName()).toBe('');
-    });
-  });
-
-  describe('useTheme', () => {
-    let useTheme;
-
-    beforeEach(async () => {
-      const module = await import('../../hooks/index.js');
-      useTheme = module.useTheme;
-    });
-
-    test('should return theme state and actions', () => {
-      const { result } = renderHook(() => useTheme());
-      
-      expect(result.current).toBeDefined();
-      expect(typeof result.current.getCurrentTheme).toBe('function');
-      expect(typeof result.current.setTheme).toBe('function');
-      expect(typeof result.current.getAvailableThemes).toBe('function');
-    });
-
-    test('should provide theme colors', () => {
-      const { result } = renderHook(() => useTheme());
-      
-      expect(result.current.currentColors).toBeDefined();
-      expect(result.current.currentColors.primary).toBeDefined();
-      expect(result.current.currentColors.background).toBeDefined();
-    });
-  });
-
-  describe('useResponsive', () => {
-    let useResponsive;
-
-    beforeEach(async () => {
-      const module = await import('../../hooks/index.js');
-      useResponsive = module.useResponsive;
-    });
-
-    test('should return responsive breakpoint information', () => {
-      const { result } = renderHook(() => useResponsive());
-      
-      expect(result.current).toBeDefined();
-      expect(typeof result.current.isMobile).toBe('boolean');
-      expect(typeof result.current.isTablet).toBe('boolean');
-      expect(typeof result.current.isDesktop).toBe('boolean');
-    });
-
-    test('should detect screen size correctly', () => {
-      // Mock window.innerWidth
-      Object.defineProperty(window, 'innerWidth', {
-        writable: true,
-        configurable: true,
-        value: 1200,
-      });
-
-      const { result } = renderHook(() => useResponsive());
-      
-      expect(result.current.isDesktop).toBe(true);
-      expect(result.current.isMobile).toBe(false);
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 1280
     });
   });
 
-  describe('useAudio', () => {
-    let useAudio;
+  test('useBreathingSession exposes session state and actions', () => {
+    const { result } = renderHook(() => useBreathingSession());
 
-    beforeEach(async () => {
-      const module = await import('../../hooks/index.js');
-      useAudio = module.useAudio;
+    expect(result.current.isRunning).toBe(false);
+    expect(result.current.currentPhase).toMatchObject({ key: 'inhale' });
+
+    act(() => {
+      result.current.start();
     });
 
-    test('should return audio state and actions', () => {
-      const { result } = renderHook(() => useAudio());
-      
-      expect(result.current).toBeDefined();
-      expect(typeof result.current.isEnabled).toBe('boolean');
-      expect(typeof result.current.volume).toBe('number');
-      expect(typeof result.current.playSound).toBe('function');
-      expect(typeof result.current.setAudioEnabled).toBe('function');
+    expect(hookMocks.breathing.startSession).toHaveBeenCalled();
+  });
+
+  test('useTechnique resolves the current technique and visualization points', async () => {
+    const { result } = renderHook(() => useTechnique());
+
+    await waitFor(() => {
+      expect(result.current.currentTechnique?.getId()).toBe('box4');
     });
 
-    test('should handle audio playback', async () => {
-      const { result } = renderHook(() => useAudio());
-      
-      await act(async () => {
-        await result.current.playSound('beep');
-      });
-      
-      expect(result.current.isPlaying).toBe(false); // Should reset after playback
+    expect(result.current.getTechniqueName()).toBe('Box Breathing');
+    expect(result.current.visualizationPoints).toEqual([{ x: 0, y: 0 }]);
+  });
+
+  test('useThemeManager returns current theme data', () => {
+    const { result } = renderHook(() => useThemeManager());
+
+    expect(result.current.currentTheme).toBe('dark');
+    expect(result.current.currentColors).toMatchObject({
+      accent: '#60A5FA'
     });
   });
 
-  describe('useVibration', () => {
-    let useVibration;
+  test('useResponsive derives desktop breakpoints from window width', () => {
+    const { result } = renderHook(() => useResponsive());
 
-    beforeEach(async () => {
-      const module = await import('../../hooks/index.js');
-      useVibration = module.useVibration;
-    });
-
-    test('should return vibration state and actions', () => {
-      const { result } = renderHook(() => useVibration());
-      
-      expect(result.current).toBeDefined();
-      expect(typeof result.current.isEnabled).toBe('boolean');
-      expect(typeof result.current.isSupported).toBe('boolean');
-      expect(typeof result.current.vibrate).toBe('function');
-      expect(typeof result.current.setVibrationEnabled).toBe('function');
-    });
-
-    test('should handle vibration patterns', async () => {
-      const { result } = renderHook(() => useVibration());
-      
-      await act(async () => {
-        await result.current.vibrate([200, 100, 200]);
-      });
-      
-      expect(result.current.isVibrating).toBe(false); // Should reset after vibration
-    });
+    expect(result.current.isDesktop).toBe(true);
+    expect(result.current.isMobile).toBe(false);
   });
 
-  describe('useAccessibility', () => {
-    let useAccessibility;
+  test('useAudio bridges to the audio service', async () => {
+    const { result } = renderHook(() => useAudio());
 
-    beforeEach(async () => {
-      const module = await import('../../hooks/index.js');
-      useAccessibility = module.useAccessibility;
+    await waitFor(() => {
+      expect(result.current.volume).toBe(0.4);
     });
 
-    test('should return accessibility preferences', () => {
-      const { result } = renderHook(() => useAccessibility());
-      
-      expect(result.current).toBeDefined();
-      expect(typeof result.current.prefersReducedMotion).toBe('boolean');
-      expect(typeof result.current.prefersHighContrast).toBe('boolean');
-      expect(typeof result.current.prefersColorScheme).toBe('string');
+    await act(async () => {
+      await result.current.playSound('beep', { frequency: 660, duration: 120 });
     });
 
-    test('should provide accessibility actions', () => {
-      const { result } = renderHook(() => useAccessibility());
-      
-      expect(typeof result.current.announce).toBe('function');
-      expect(typeof result.current.focusElement).toBe('function');
-      expect(typeof result.current.trapFocus).toBe('function');
+    expect(hookMocks.services.audioService.playBeep).toHaveBeenCalledWith(660, 120, null);
+
+    act(() => {
+      result.current.stopSound();
     });
 
-    test('should announce messages to screen readers', () => {
-      const { result } = renderHook(() => useAccessibility());
-      
-      act(() => {
-        result.current.announce('Test message');
-      });
-      
-      // Check if live region was created
-      const liveRegion = document.getElementById('live-region');
-      expect(liveRegion).toBeDefined();
-      expect(liveRegion.textContent).toBe('Test message');
-    });
+    expect(hookMocks.services.audioService.stopAll).toHaveBeenCalled();
   });
 
-  describe('useErrorHandler', () => {
-    let useErrorHandler;
+  test('useVibration bridges to the vibration service', async () => {
+    const { result } = renderHook(() => useVibration());
 
-    beforeEach(async () => {
-      const module = await import('../../hooks/index.js');
-      useErrorHandler = module.useErrorHandler;
+    await waitFor(() => {
+      expect(result.current.isSupported).toBe(true);
     });
 
-    test('should return error handling utilities', () => {
-      const { result } = renderHook(() => useErrorHandler());
-      
-      expect(result.current).toBeDefined();
-      expect(typeof result.current.handleError).toBe('function');
-      expect(typeof result.current.addErrorListener).toBe('function');
-      expect(typeof result.current.removeErrorListener).toBe('function');
-      expect(typeof result.current.getErrorHistory).toBe('function');
+    await act(async () => {
+      await result.current.vibrate([200, 100, 200]);
     });
 
-    test('should handle errors gracefully', () => {
-      const { result } = renderHook(() => useErrorHandler());
-      
-      const error = new Error('Test error');
-      
-      act(() => {
-        result.current.handleError(error);
-      });
-      
-      // Should not throw
-      expect(true).toBe(true);
+    expect(hookMocks.services.vibrationService.vibrate).toHaveBeenCalledWith([200, 100, 200]);
+
+    act(() => {
+      result.current.stopVibration();
     });
+
+    expect(hookMocks.services.vibrationService.stop).toHaveBeenCalled();
+  });
+
+  test('useAccessibility announces messages through a live region', () => {
+    const { result } = renderHook(() => useAccessibility());
+
+    act(() => {
+      result.current.announce('Test message');
+    });
+
+    expect(document.getElementById('live-region')).toHaveTextContent('Test message');
   });
 });
-

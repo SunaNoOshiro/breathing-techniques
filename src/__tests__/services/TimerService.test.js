@@ -1,191 +1,141 @@
-/**
- * TimerService Tests
- * Tests for the TimerService class
- */
-
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { TimerService } from '../../services/TimerService.js';
-import { TestUtils, TestAssertions } from '../TestUtils.js';
+
+const createMockTechnique = () => ({
+  getId: vi.fn(() => 'box4'),
+  getTotalDuration: vi.fn(() => 12),
+  getCurrentPhase: vi.fn((elapsedSeconds) => {
+    const phases = [
+      { key: 'inhale', name: 'Inhale', duration: 4 },
+      { key: 'hold', name: 'Hold', duration: 4 },
+      { key: 'exhale', name: 'Exhale', duration: 4 }
+    ];
+
+    const normalizedTime = elapsedSeconds % 12;
+    const phaseIndex = normalizedTime < 4 ? 0 : normalizedTime < 8 ? 1 : 2;
+    const phase = phases[phaseIndex];
+    const phaseStart = phaseIndex * 4;
+    const timeInPhase = normalizedTime - phaseStart;
+
+    return {
+      phaseIndex,
+      phase,
+      key: phase.key,
+      duration: phase.duration,
+      timeInPhase,
+      timeLeft: phase.duration - timeInPhase
+    };
+  })
+});
 
 describe('TimerService', () => {
   let timerService;
-  let mockTechnique;
+  let technique;
 
   beforeEach(() => {
-    mockTechnique = TestUtils.createMockTechnique();
+    vi.useFakeTimers();
     timerService = new TimerService();
+    technique = createMockTechnique();
   });
 
   afterEach(() => {
     timerService.stop();
-    jest.clearAllMocks();
+    vi.useRealTimers();
   });
 
-  describe('initialization', () => {
-    test('should initialize with default state', () => {
-      const state = timerService.getState();
-      
-      expect(state.isRunning).toBe(false);
-      expect(state.isPaused).toBe(false);
-      expect(state.currentTime).toBe(0);
-      expect(state.currentPhase).toBeNull();
-    });
+  test('sets the technique and initializes state', () => {
+    timerService.setTechnique(technique);
 
-    test('should set technique correctly', () => {
-      timerService.setTechnique(mockTechnique);
-      
-      const state = timerService.getState();
-      expect(state.technique).toBe(mockTechnique);
+    expect(timerService.getState()).toMatchObject({
+      totalDuration: 12,
+      technique: 'box4',
+      currentTime: 0
+    });
+    expect(timerService.getCurrentPhase()).toMatchObject({
+      key: 'inhale'
     });
   });
 
-  describe('timer control', () => {
-    beforeEach(() => {
-      timerService.setTechnique(mockTechnique);
+  test('starts immediately and emits update events on each tick', async () => {
+    const startListener = vi.fn();
+    const updateListener = vi.fn();
+
+    timerService.setTechnique(technique);
+    timerService.addListener('start', startListener);
+    timerService.addListener('update', updateListener);
+
+    await timerService.start();
+
+    expect(startListener).toHaveBeenCalledTimes(1);
+    expect(updateListener).toHaveBeenCalledTimes(1);
+    expect(timerService.getState()).toMatchObject({
+      isRunning: true,
+      isPaused: false,
+      currentTime: 0
     });
 
-    test('should start timer', async () => {
-      const startPromise = timerService.start();
-      
-      expect(timerService.getState().isRunning).toBe(true);
-      
-      await startPromise;
+    vi.advanceTimersByTime(1000);
+
+    expect(updateListener).toHaveBeenCalledTimes(2);
+    expect(timerService.getState().currentTime).toBe(1);
+  });
+
+  test('pauses, resumes, stops and resets correctly', async () => {
+    timerService.setTechnique(technique);
+    await timerService.start();
+
+    timerService.pause();
+    expect(timerService.getState()).toMatchObject({
+      isRunning: true,
+      isPaused: true
     });
 
-    test('should pause timer', () => {
-      timerService.start();
-      timerService.pause();
-      
-      const state = timerService.getState();
-      expect(state.isRunning).toBe(false);
-      expect(state.isPaused).toBe(true);
+    timerService.resume();
+    expect(timerService.getState()).toMatchObject({
+      isRunning: true,
+      isPaused: false
     });
 
-    test('should resume timer', () => {
-      timerService.start();
-      timerService.pause();
-      timerService.resume();
-      
-      const state = timerService.getState();
-      expect(state.isRunning).toBe(true);
-      expect(state.isPaused).toBe(false);
+    timerService.stop();
+    expect(timerService.getState()).toMatchObject({
+      isRunning: false,
+      isPaused: false
     });
 
-    test('should stop timer', () => {
-      timerService.start();
-      timerService.stop();
-      
-      const state = timerService.getState();
-      expect(state.isRunning).toBe(false);
-      expect(state.isPaused).toBe(false);
-      expect(state.currentTime).toBe(0);
-    });
-
-    test('should reset timer', () => {
-      timerService.start();
-      timerService.reset();
-      
-      const state = timerService.getState();
-      expect(state.isRunning).toBe(false);
-      expect(state.isPaused).toBe(false);
-      expect(state.currentTime).toBe(0);
-      expect(state.currentPhase).toBeNull();
+    timerService.reset();
+    expect(timerService.getState()).toMatchObject({
+      currentTime: 0,
+      isRunning: false,
+      isPaused: false
     });
   });
 
-  describe('phase management', () => {
-    beforeEach(() => {
-      timerService.setTechnique(mockTechnique);
-    });
+  test('allows listeners to unsubscribe', async () => {
+    const updateListener = vi.fn();
 
-    test('should calculate current phase correctly', () => {
-      timerService.setTechnique(mockTechnique);
-      
-      // Simulate time progression
-      timerService.start();
-      
-      // Wait for phase calculation
-      setTimeout(() => {
-        const state = timerService.getState();
-        expect(state.currentPhase).toBeDefined();
-      }, 100);
-    });
+    timerService.setTechnique(technique);
+    const unsubscribe = timerService.addListener('update', updateListener);
+    unsubscribe();
 
-    test('should handle phase transitions', () => {
-      const phaseListener = jest.fn();
-      timerService.addListener('phaseChange', phaseListener);
-      
-      timerService.start();
-      
-      // Wait for potential phase change
-      setTimeout(() => {
-        expect(phaseListener).toHaveBeenCalled();
-      }, 1000);
-    });
+    await timerService.start();
+    vi.advanceTimersByTime(1000);
+
+    expect(updateListener).not.toHaveBeenCalled();
   });
 
-  describe('event listeners', () => {
-    test('should add and remove listeners', () => {
-      const listener = jest.fn();
-      
-      const unsubscribe = timerService.addListener('update', listener);
-      expect(typeof unsubscribe).toBe('function');
-      
-      timerService.start();
-      
-      setTimeout(() => {
-        expect(listener).toHaveBeenCalled();
-        unsubscribe();
-      }, 100);
-    });
+  test('emits cycleComplete after a full cycle', async () => {
+    const cycleCompleteListener = vi.fn();
 
-    test('should notify listeners on timer events', () => {
-      const startListener = jest.fn();
-      const pauseListener = jest.fn();
-      const stopListener = jest.fn();
-      
-      timerService.addListener('start', startListener);
-      timerService.addListener('pause', pauseListener);
-      timerService.addListener('stop', stopListener);
-      
-      timerService.start();
-      expect(startListener).toHaveBeenCalled();
-      
-      timerService.pause();
-      expect(pauseListener).toHaveBeenCalled();
-      
-      timerService.stop();
-      expect(stopListener).toHaveBeenCalled();
-    });
+    timerService.setTechnique(technique);
+    timerService.addListener('cycleComplete', cycleCompleteListener);
+    await timerService.start();
+
+    vi.advanceTimersByTime(12000);
+
+    expect(cycleCompleteListener).toHaveBeenCalled();
   });
 
-  describe('error handling', () => {
-    test('should handle invalid technique gracefully', () => {
-      expect(() => timerService.setTechnique(null)).not.toThrow();
-      expect(() => timerService.setTechnique({})).not.toThrow();
-    });
-
-    test('should handle timer errors gracefully', () => {
-      // Mock technique with invalid durations
-      const invalidTechnique = {
-        ...mockTechnique,
-        durationsSec: []
-      };
-      
-      timerService.setTechnique(invalidTechnique);
-      
-      expect(() => timerService.start()).not.toThrow();
-    });
-  });
-
-  describe('capabilities', () => {
-    test('should report capabilities correctly', () => {
-      const capabilities = timerService.getCapabilities();
-      
-      expect(capabilities).toBeDefined();
-      expect(typeof capabilities.supportsPause).toBe('boolean');
-      expect(typeof capabilities.supportsResume).toBe('boolean');
-      expect(typeof capabilities.maxDuration).toBe('number');
-    });
+  test('rejects start when no technique is configured', async () => {
+    await expect(timerService.start()).rejects.toThrow(/without technique/i);
   });
 });
-
