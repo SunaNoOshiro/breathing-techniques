@@ -536,7 +536,7 @@ export const useAudio = () => {
   // Initialize audio service state
   useEffect(() => {
     if (audioService) {
-      setIsEnabled(audioService.isEnabled());
+      setIsEnabled(audioService.getEnabled?.() ?? audioService.isEnabled?.() ?? true);
       setVolume(audioService.getVolume());
     }
   }, [audioService]);
@@ -546,7 +546,20 @@ export const useAudio = () => {
     
     try {
       setIsPlaying(true);
-      await audioService.playSound(soundType, options);
+      if (typeof audioService.playSound === 'function') {
+        await audioService.playSound(soundType, options);
+      } else if (soundType === 'beep' && typeof audioService.playBeep === 'function') {
+        const duration = typeof options.duration === 'number' && options.duration < 10
+          ? options.duration * 1000
+          : options.duration;
+        await audioService.playBeep(
+          options.frequency,
+          duration ?? 100,
+          options.volume ?? null
+        );
+      } else if (typeof audioService.playTone === 'function') {
+        await audioService.playTone({ type: soundType, ...options });
+      }
     } catch (error) {
       Logger.error("hook", 'Audio playback failed:', error);
     } finally {
@@ -556,7 +569,11 @@ export const useAudio = () => {
   
   const stopSound = useCallback(() => {
     if (audioService) {
-      audioService.stopSound();
+      if (typeof audioService.stopSound === 'function') {
+        audioService.stopSound();
+      } else if (typeof audioService.stopAll === 'function') {
+        audioService.stopAll();
+      }
       setIsPlaying(false);
     }
   }, [audioService]);
@@ -610,8 +627,8 @@ export const useVibration = () => {
   // Initialize vibration service state
   useEffect(() => {
     if (vibrationService) {
-      setIsEnabled(vibrationService.isEnabled());
-      setIsSupported(vibrationService.isSupported());
+      setIsEnabled(vibrationService.getEnabled?.() ?? vibrationService.isEnabled?.() ?? true);
+      setIsSupported(vibrationService.getSupported?.() ?? vibrationService.isSupported?.() ?? false);
     }
   }, [vibrationService]);
   
@@ -630,7 +647,11 @@ export const useVibration = () => {
   
   const stopVibration = useCallback(() => {
     if (vibrationService) {
-      vibrationService.stopVibration();
+      if (typeof vibrationService.stopVibration === 'function') {
+        vibrationService.stopVibration();
+      } else if (typeof vibrationService.stop === 'function') {
+        vibrationService.stop();
+      }
       setIsVibrating(false);
     }
   }, [vibrationService]);

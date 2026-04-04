@@ -6,6 +6,12 @@ export default defineConfig({
   plugins: [react()],
   base: '/breathing-techniques/', 
   assetsInclude: ['**/*.yaml', '**/*.yml'],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setupTests.js',
+    css: false
+  },
   server: {
     host: true, // Expose to local network
     fs: {

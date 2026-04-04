@@ -3,6 +3,8 @@
  * Provides utilities and setup for comprehensive testing
  */
 
+import { vi } from 'vitest';
+
 /**
  * Test utilities for mocking and testing
  */
@@ -13,26 +15,74 @@ export class TestUtils {
    * @returns {object} - Mock technique
    */
   static createMockTechnique(overrides = {}) {
-    return {
+    const technique = {
       id: 'test-technique',
       name: 'Test Technique',
       description: 'A test breathing technique',
       benefits: 'Reduces stress and anxiety',
       phases: [
-        { key: 'inhale', name: 'Inhale' },
-        { key: 'hold', name: 'Hold' },
-        { key: 'exhale', name: 'Exhale' }
+        { key: 'inhale', name: 'Inhale', duration: 4 },
+        { key: 'hold', name: 'Hold', duration: 4 },
+        { key: 'exhale', name: 'Exhale', duration: 4 }
       ],
       durationsSec: [4, 4, 4],
       pattern: '4-4-4',
-      getTotalDuration: () => 12,
-      getCurrentPhase: (elapsedSeconds) => ({
-        key: 'inhale',
-        name: 'Inhale',
-        timeInPhase: elapsedSeconds % 4,
-        duration: 4
-      }),
-      validate: () => true,
+      getId() {
+        return this.id;
+      },
+      getName() {
+        return this.name;
+      },
+      getDescription() {
+        return this.description;
+      },
+      getBenefits() {
+        return this.benefits;
+      },
+      getPattern() {
+        return this.pattern;
+      },
+      getPhases() {
+        return this.phases;
+      },
+      getDurationsSec() {
+        return this.durationsSec;
+      },
+      getTotalDuration() {
+        return this.durationsSec.reduce((sum, duration) => sum + duration, 0);
+      },
+      getCurrentPhase(elapsedSeconds) {
+        const phases = this.getPhases();
+        const durations = this.getDurationsSec();
+        const totalDuration = this.getTotalDuration();
+        const normalizedTime = ((elapsedSeconds % totalDuration) + totalDuration) % totalDuration;
+
+        let runningTotal = 0;
+        for (let index = 0; index < phases.length; index += 1) {
+          const duration = durations[index];
+          if (normalizedTime < runningTotal + duration) {
+            const timeInPhase = normalizedTime - runningTotal;
+            return {
+              phaseIndex: index,
+              phase: phases[index],
+              key: phases[index].key,
+              duration,
+              timeInPhase,
+              timeLeft: duration - timeInPhase
+            };
+          }
+          runningTotal += duration;
+        }
+
+        return null;
+      },
+      validate() {
+        return true;
+      }
+    };
+
+    return {
+      ...technique,
       ...overrides
     };
   }
@@ -44,17 +94,20 @@ export class TestUtils {
    */
   static createMockTheme(overrides = {}) {
     return {
+      key: 'test-theme',
       id: 'test-theme',
       name: 'Test Theme',
       colors: {
+        bg: '#ffffff',
+        panel: '#f8f9fa',
+        accent: '#007bff',
+        border: '#dee2e6',
         primary: '#007bff',
         secondary: '#6c757d',
-        accent: '#28a745',
         background: '#ffffff',
         surface: '#f8f9fa',
         text: '#212529',
         textSecondary: '#6c757d',
-        border: '#dee2e6',
         error: '#dc3545',
         success: '#28a745',
         warning: '#ffc107',
@@ -121,30 +174,37 @@ export class TestUtils {
   static createMockServices(overrides = {}) {
     return {
       audioService: {
-        playSound: jest.fn(),
-        stopSound: jest.fn(),
-        setVolume: jest.fn(),
-        isEnabled: () => true
+        getEnabled: vi.fn(() => true),
+        getVolume: vi.fn(() => 0.25),
+        playBeep: vi.fn(),
+        stopAll: vi.fn(),
+        setEnabled: vi.fn(),
+        setVolume: vi.fn(),
+        getCapabilities: vi.fn(() => ({ supported: true }))
       },
       vibrationService: {
-        vibrate: jest.fn(),
-        isSupported: () => true,
-        isEnabled: () => true
+        vibrate: vi.fn(),
+        stop: vi.fn(),
+        getSupported: vi.fn(() => true),
+        getEnabled: vi.fn(() => true),
+        setEnabled: vi.fn(),
+        getCapabilities: vi.fn(() => ({ supported: true }))
       },
       themeService: {
-        getCurrentTheme: () => TestUtils.createMockTheme(),
-        setTheme: jest.fn(),
-        getAvailableThemes: () => [TestUtils.createMockTheme()]
+        getCurrentTheme: vi.fn(() => 'dark'),
+        getCurrentThemeColors: vi.fn(() => TestUtils.createMockTheme().colors),
+        setCurrentTheme: vi.fn(),
+        getAllThemes: vi.fn(() => [TestUtils.createMockTheme()])
       },
       storageService: {
-        get: jest.fn(),
-        set: jest.fn(),
-        remove: jest.fn(),
-        clear: jest.fn()
+        get: vi.fn(),
+        set: vi.fn(),
+        remove: vi.fn(),
+        clear: vi.fn()
       },
       techniqueRegistry: {
-        getTechnique: jest.fn(() => TestUtils.createMockTechnique()),
-        getAllTechniques: jest.fn(() => [TestUtils.createMockTechnique()])
+        getTechnique: vi.fn(() => TestUtils.createMockTechnique()),
+        getAllTechniques: vi.fn(() => [TestUtils.createMockTechnique()])
       },
       ...overrides
     };
@@ -166,12 +226,12 @@ export class TestUtils {
   static mockLocalStorage() {
     const store = {};
     return {
-      getItem: jest.fn(key => store[key] || null),
-      setItem: jest.fn((key, value) => { store[key] = value; }),
-      removeItem: jest.fn(key => { delete store[key]; }),
-      clear: jest.fn(() => { Object.keys(store).forEach(key => delete store[key]); }),
+      getItem: vi.fn(key => store[key] || null),
+      setItem: vi.fn((key, value) => { store[key] = value; }),
+      removeItem: vi.fn(key => { delete store[key]; }),
+      clear: vi.fn(() => { Object.keys(store).forEach(key => delete store[key]); }),
       length: Object.keys(store).length,
-      key: jest.fn(index => Object.keys(store)[index] || null)
+      key: vi.fn(index => Object.keys(store)[index] || null)
     };
   }
 
@@ -181,15 +241,15 @@ export class TestUtils {
    * @returns {object} - Mock matchMedia
    */
   static mockMatchMedia(matches = {}) {
-    return jest.fn(query => ({
+    return vi.fn(query => ({
       matches: matches[query] || false,
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn()
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
     }));
   }
 
@@ -199,28 +259,28 @@ export class TestUtils {
    */
   static mockWebAudioAPI() {
     const mockAudioContext = {
-      createOscillator: jest.fn(() => ({
-        connect: jest.fn(),
-        start: jest.fn(),
-        stop: jest.fn(),
+      createOscillator: vi.fn(() => ({
+        connect: vi.fn(),
+        start: vi.fn(),
+        stop: vi.fn(),
         frequency: { value: 440 }
       })),
-      createGain: jest.fn(() => ({
-        connect: jest.fn(),
+      createGain: vi.fn(() => ({
+        connect: vi.fn(),
         gain: { value: 0.5 }
       })),
-      createAnalyser: jest.fn(() => ({
-        connect: jest.fn(),
+      createAnalyser: vi.fn(() => ({
+        connect: vi.fn(),
         frequencyBinCount: 256
       })),
       destination: {},
       state: 'running',
-      resume: jest.fn()
+      resume: vi.fn()
     };
 
     return {
-      AudioContext: jest.fn(() => mockAudioContext),
-      webkitAudioContext: jest.fn(() => mockAudioContext)
+      AudioContext: vi.fn(() => mockAudioContext),
+      webkitAudioContext: vi.fn(() => mockAudioContext)
     };
   }
 
@@ -231,7 +291,7 @@ export class TestUtils {
   static mockVibrationAPI() {
     return {
       navigator: {
-        vibrate: jest.fn()
+        vibrate: vi.fn()
       }
     };
   }
@@ -342,11 +402,11 @@ export class TestAssertions {
    */
   static assertValidTheme(theme) {
     expect(theme).toBeDefined();
-    expect(theme.id).toBeDefined();
+    expect(theme.id || theme.key).toBeDefined();
     expect(theme.name).toBeDefined();
     expect(theme.colors).toBeDefined();
-    expect(theme.colors.primary).toBeDefined();
-    expect(theme.colors.background).toBeDefined();
+    expect(theme.colors.accent || theme.colors.primary).toBeDefined();
+    expect(theme.colors.bg || theme.colors.background).toBeDefined();
     expect(theme.colors.text).toBeDefined();
   }
 
@@ -392,15 +452,15 @@ export class TestEnvironment {
     // Mock console methods for cleaner test output
     global.console = {
       ...console,
-      log: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn()
+      log: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn()
     };
   }
 
   static teardown() {
     // Clean up mocks
-    jest.clearAllMocks();
-    jest.resetAllMocks();
+    vi.clearAllMocks();
+    vi.resetAllMocks();
   }
 }
